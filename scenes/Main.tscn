@@ -1,0 +1,58 @@
+[gd_scene load_steps=8 format=3 uid="uid://5a6i8oo00xwd"]
+
+[ext_resource type="Script" path="res://scripts/Player.cs" id="1_1pkst"]
+[ext_resource type="Texture2D" uid="uid://ddi0y41bje2xs" path="res://assets/square.png" id="2_dqxdt"]
+[ext_resource type="Script" path="res://scripts/Managers/GameManager.cs" id="2_m58tf"]
+[ext_resource type="PackedScene" uid="uid://c2uvefidrt3fg" path="res://scenes/Components/state_machine_component.tscn" id="3_24huv"]
+[ext_resource type="Script" path="res://scripts/Player.cs" id="4_m1yw8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ce13d"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nfqmd"]
+
+[node name="World" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.5, 0.5)
+position_smoothing_enabled = true
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+editor_draw_drag_margin = true
+script = ExtResource("4_m1yw8")
+
+[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
+script = ExtResource("1_1pkst")
+_rb = NodePath("")
+
+[node name="StateMachineComponent" parent="Player" instance=ExtResource("3_24huv")]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+texture = ExtResource("2_dqxdt")
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="Player"]
+collision_layer = 2
+platform_on_leave = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/CharacterBody2D"]
+shape = SubResource("RectangleShape2D_ce13d")
+
+[node name="Platform" type="Node2D" parent="."]
+position = Vector2(0, 268)
+scale = Vector2(49.2299, 6.24394)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Platform"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform/StaticBody2D"]
+shape = SubResource("RectangleShape2D_nfqmd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Platform"]
+self_modulate = Color(0.184314, 0.184314, 0.184314, 1)
+texture = ExtResource("2_dqxdt")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Managers" type="Node" parent="."]
+
+[node name="GameManager" type="Node" parent="Managers"]
+script = ExtResource("2_m58tf")
