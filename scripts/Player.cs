@@ -278,6 +278,7 @@ public partial class Player : Node2D
 
 		if (!result.ContainsKey("position"))
 		{
+			GD.Print("BRUH WTF");
 			_sm.SetState((int)States.Normal);
 			return;
 		}
@@ -338,7 +339,7 @@ public partial class Player : Node2D
 		_isDiveHopping = true;
 
 		float dist = _diveDistance * DiveDistMult;
-		dist = Mathf.Clamp(dist, 8f, 20f);
+		dist = Mathf.Clamp(dist, 2.5f, 20f);
 
 		Vector2 dir;
 		if (_diveHopDir == Vector2.Zero)

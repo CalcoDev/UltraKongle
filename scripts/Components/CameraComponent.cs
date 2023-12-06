@@ -12,6 +12,8 @@ public partial class CameraComponent : Camera2D
     [Export] private float PositionLerpSpeed = 2f;
     [Export] private float ZoomLerpSpeed = 2f;
 
+    [Export] private bool Static = false;
+
     public Vector2 AdditionalOffset { get; set; }
     public float CZoom { get; set; } = 1f;
     public float AdditionalZoom { get; set; } = 0f;
@@ -36,6 +38,9 @@ public partial class CameraComponent : Camera2D
 
     public override void _Process(double delta)
     {
+        if (Static)
+            return;
+
         // Zoom
         Vector2 targetZoom = new Vector2(CZoom + AdditionalZoom, CZoom + AdditionalZoom);
         AdditionalZoom = 0f;
