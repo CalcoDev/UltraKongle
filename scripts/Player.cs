@@ -266,8 +266,8 @@ public partial class Player : Node2D
 		// force /= 29;
 		force *= 2;
 
-		const float maxForce = 255;
-		const float maxForceX = 230;
+		const float maxForce = 230;
+		const float maxForceX = 215;
 		if (force.Length() > maxForce)
 			force = force.Normalized() * maxForce;
 
