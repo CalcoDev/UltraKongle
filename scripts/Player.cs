@@ -281,7 +281,11 @@ public partial class Player : Node2D
 		GD.Print($"JOHN XINA ANGLE: {Mathf.RadToDeg(angle)}");
 		if (angle < Mathf.DegToRad(85) && angle > Mathf.DegToRad(60))
 		{
-			var deg = Mathf.DegToRad( 25f ) * -ssign;
+			// 60 85 -> 30 5
+			var diff = 30 + (-1F * (Mathf.RadToDeg(angle) - 60));
+			GD.Print($"ADJUSTED ANGLE: {diff}");
+
+			var deg = Mathf.DegToRad(diff) * -ssign;
 			force = force.Rotated(deg);
 			GD.Print($"JNMH DC X: {force} | {_isGrounded}");
 		}
