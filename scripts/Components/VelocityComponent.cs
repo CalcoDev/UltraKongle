@@ -1,4 +1,6 @@
-﻿using Godot;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Godot;
 
 namespace KongleJam.Components;
 
@@ -11,9 +13,33 @@ public partial class VelocityComponent : Node
     public float X => _velocity.X;
     public float Y => _velocity.Y;
 
-    public Vector2 GetVelocity()
+    private readonly List<Vector2> _additional = new();
+
+    public void AddAdditional(Vector2 vel)
+    {
+        _additional.Add(vel);
+    }
+
+    public void ClearAdditional()
+    {
+        _additional.Clear();
+    }
+
+    public Vector2 GetAdditional()
+    {
+        return _additional.Aggregate(Vector2.Zero, (current, add) => current + add);
+    }
+
+    public Vector2 Get()
     {
         return _velocity;
+    }
+
+    public Vector2 GetClear()
+    {
+        Vector2 vel = Get() + GetAdditional();
+        ClearAdditional();
+        return vel;
     }
 
     public void Approach(Vector2 target, float maxDelta)
@@ -34,26 +60,33 @@ public partial class VelocityComponent : Node
 
     private static float Approach(float current, float target, float maxDelta)
     {
-        return current < target ? Mathf.Min(current + maxDelta, target) : Mathf.Max(current - maxDelta, target);
+        float difference = target - current;
+
+        if (Mathf.Abs(difference) <= maxDelta)
+            return target;
+
+        return current + (difference > 0 ? maxDelta : -maxDelta);
+
+        // return current < target ? Mathf.Min(current + maxDelta, target) : Mathf.Max(current - maxDelta, target);
     }
 
-    public void SetVelocityX(float value)
+    public void SetX(float value)
     {
         _velocity.X = value;
     }
 
-    public void SetVelocityY(float value)
+    public void SetY(float value)
     {
         _velocity.Y = value;
     }
 
-    public void SetVelocity(float x, float y)
+    public void Set(float x, float y)
     {
         _velocity.X = x;
         _velocity.Y = y;
     }
 
-    public void SetVelocity(Vector2 v)
+    public void Set(Vector2 v)
     {
         _velocity = v;
     }

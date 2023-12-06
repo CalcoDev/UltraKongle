@@ -6,15 +6,15 @@ public static class Calc
 {
     public static bool SameSign(float a, float b)
     {
-        return (a < 0) == (b < 0);
+        return (a != 0 && b != 0) && (a < 0) == (b < 0);
     }
 
     public static bool SameSignZero(float a, float b)
     {
-        if (a == 0 || b == 0)
+        if (FloatEquals(a, 0) || FloatEquals(b, 0))
             return true;
 
-        return (a < 0) == (b < 0);
+        return a < 0 == b < 0;
     }
 
     public static float Approach(float current, float target, float maxDelta)
