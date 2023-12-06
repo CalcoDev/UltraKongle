@@ -18,14 +18,14 @@ interpolation_mode = 2
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_m0g6m"]
-friction = 0.2
+friction = 0.4
 bounce = 0.4
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ce13d"]
 size = Vector2(16, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oixgg"]
-size = Vector2(15.5, 3)
+size = Vector2(16.1875, 2)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hgkv0"]
 size = Vector2(3, 16)
@@ -111,6 +111,7 @@ target = NodePath("../RigidBody2D")
 texture = ExtResource("6_3y1xn")
 
 [node name="RigidBody2D" type="RigidBody2D" parent="Player"]
+collision_layer = 2
 physics_material_override = SubResource("PhysicsMaterial_m0g6m")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
@@ -120,7 +121,7 @@ shape = SubResource("RectangleShape2D_ce13d")
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D/GravityCheck"]
-position = Vector2(0.25, 9.5)
+position = Vector2(-0.09375, 9)
 shape = SubResource("RectangleShape2D_oixgg")
 
 [node name="WallLeftCheck" type="Area2D" parent="Player/RigidBody2D"]

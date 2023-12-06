@@ -266,10 +266,15 @@ public partial class Player : Node2D
 		// force /= 29;
 		force *= 2;
 
-		const float maxForce = 270;
+		const float maxForce = 255;
 		const float maxForceX = 230;
 		if (force.Length() > maxForce)
 			force = force.Normalized() * maxForce;
+
+		// force = new Vector2(
+		// 	Mathf.Clamp(force.X, -maxForce, maxForce),
+		// 	Mathf.Clamp(force.Y, -maxForce, maxForce)
+		// );
 
 		var ratio = force.Y / force.X;
 		GD.Print($"ASDASDA: {force}");
@@ -279,12 +284,14 @@ public partial class Player : Node2D
 			force.X = maxForceX * sign;
 			force.Y = ratio * maxForceX * sign;
 
-			// GD.Print($"JASUDHASIUDHASD: {force.AngleTo(Vector2.Up)}");
-			if (Mathf.Abs(force.AngleTo(Vector2.Up)) > Mathf.DegToRad(60f))
+			if (_isGrounded)
 			{
-				var deg = Mathf.DegToRad(35f) * -sign;
-				force = force.Rotated(deg);
-				GD.Print($"FORCE: {force}");
+				if (Mathf.Abs(force.AngleTo(Vector2.Up)) > Mathf.DegToRad(75f))
+				{
+					var deg = Mathf.DegToRad(15f) * -sign;
+					force = force.Rotated(deg);
+					GD.Print($"FORCE: {force} | {_isGrounded}");
+				}
 			}
 		}
 
@@ -437,6 +444,8 @@ public partial class Player : Node2D
 	// GROUND STUFF
 	private void OnEnterGround(Node body)
 	{
+		GD.Print("GROUND");
+
 		_isJumping = false;
 		_isDiveHopping = false;
 		_isGrounded = true;
@@ -444,6 +453,7 @@ public partial class Player : Node2D
 
 	private void OnExitGround(Node body)
 	{
+		GD.Print("GROUND NOT");
 		_isGrounded = false;
 	}
 }
