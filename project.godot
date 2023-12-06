@@ -13,7 +13,7 @@ config_version=5
 config/name="UltraKongle"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
-run/max_fps=240
+run/max_fps=120
 
 [display]
 
@@ -83,6 +83,11 @@ fullscreen={
 
 2d_physics/layer_1="level_geometry"
 2d_physics/layer_2="player"
+
+[physics]
+
+common/physics_ticks_per_second=120
+2d/default_gravity=490.0
 
 [rendering]
 

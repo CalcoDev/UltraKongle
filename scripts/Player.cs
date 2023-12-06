@@ -19,12 +19,12 @@ public partial class Player : Node2D
 
 	// References
 	[ExportGroup("References")]
-	[Export] private Actor _rb;
-	// [Export] private RigidBody2D _rb;
+	// [Export] private Actor _rb;
+	[Export] private RigidBody2D _rb;
 
 	[Export] private StateMachineComponent _sm;
 
-	[Export] private VelocityComponent _vel;
+	// [Export] private VelocityComponent _vel;
 
 	[Export] private Area2D _groundChecker;
 	[Export] private Area2D _leftWallChecker;
@@ -174,25 +174,25 @@ public partial class Player : Node2D
 		// Gravity
 		if (!_isGrounded)
 		{
-			if (IsClimbing)
-				_vel.ApproachY(0, Gravity * Game.DeltaTime);
-			else
-				_vel.ApproachY(MaxVSpeed, Gravity * Game.DeltaTime);
+			// if (IsClimbing)
+				// _vel.ApproachY(0, Gravity * Game.DeltaTime);
+			// else
+				// _vel.ApproachY(MaxVSpeed, Gravity * Game.DeltaTime);
 
 			// TODO(calco): Yeet apex control maybe
 		}
 		else // Friction
 		{
-			_vel.ApproachX(0f, GroundFriction * Game.DeltaTime);
+			// _vel.ApproachX(0f, GroundFriction * Game.DeltaTime);
 		}
 
-		if (Mathf.Abs(_vel.X) > MaxHSpeed)
-			_vel.ApproachX(MaxHSpeed, MaxSpeedDrag * Game.DeltaTime);
+		// if (Mathf.Abs(_vel.X) > MaxHSpeed)
+			// _vel.ApproachX(MaxHSpeed, MaxSpeedDrag * Game.DeltaTime);
 
 		// Rolling
 		if (!Calc.FloatEquals(Mathf.Abs(_inpRoll), 0))
 		{
-			_vel.AddAdditional(Vector2.Right * _inpRoll * RollSpeed * Game.DeltaTime);
+			// _vel.AddAdditional(Vector2.Right * _inpRoll * RollSpeed * Game.DeltaTime);
 		}
 
 		// Dive Hop
@@ -205,12 +205,12 @@ public partial class Player : Node2D
 		if (!_isJumping && _hopBuffer.TimeLeft > 0 && (IsClimbing || (!_isDiveHopping && _isGrounded))) // Hop
 		{
 			_isJumping = true;
-			_vel.SetY(-HopForce);
+			// _vel.SetY(-HopForce);
 
 			if (IsClimbing)
 			{
-				GD.Print("aaaaaaaaa");
-				_vel.SetX(_wallNormal.X * WallJumpOffForce);
+				// GD.Print("aaaaaaaaa");
+				// _vel.SetX(_wallNormal.X * WallJumpOffForce);
 			}
 		}
 
@@ -223,8 +223,8 @@ public partial class Player : Node2D
 			YeetUpdate();
 
 		// Camera Physics
-		float speed = Mathf.Clamp(_vel.Get().Length(), 0f, 20f) / 20f;
-		Game.Camera.AdditionalZoom = -(0.31f * speed);
+		// float speed = Mathf.Clamp(_vel.Get().Length(), 0f, 20f) / 20f;
+		// Game.Camera.AdditionalZoom = -(0.31f * speed);
 
 		_wasClimbing = IsClimbing;
 
@@ -233,10 +233,10 @@ public partial class Player : Node2D
 
 	private void NormalPhysics()
 	{
-		Vector2 vel = _vel.GetClear();
+		// Vector2 vel = _vel.GetClear();
 
-		_rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
-		_rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
+		// _rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
+		// _rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
 	}
 
 	// YEET
@@ -263,9 +263,10 @@ public partial class Player : Node2D
 		_line.Visible = false;
 
 		Vector2 force = _line.Points[1] - _line.Points[0];
-		force /= 29;
+		// force /= 29;
+		force *= 2;
 
-		const float maxForce = 7;
+		const float maxForce = 200;
 		// if (force.Length() > maxForce)
 		// 	force = force.Normalized() * maxForce;
 
@@ -273,11 +274,13 @@ public partial class Player : Node2D
 			Mathf.Clamp(force.X, -maxForce, maxForce),
 			Mathf.Clamp(force.Y, -maxForce, maxForce)
 		);
-		GD.Print($"FORCE: {force}");
+		// GD.Print($"FORCE: {force}");
 
 		// force *= new Vector2(1f, 3f);
 
-		_vel.Set(force);
+		// _vel.Set(force);
+		_rb.LinearVelocity = Vector2.Zero;
+		_rb.ApplyImpulse(force);
 	}
 
 	// DIVE
@@ -300,7 +303,7 @@ public partial class Player : Node2D
 		_diveHopTimer.Start();
 		_diveHop = false;
 
-		_vel.Set(Vector2.Down * DiveSpeed);
+		// _vel.Set(Vector2.Down * DiveSpeed);
 
 		_diveHopDir = new Vector2(_inpRoll, -1).Normalized();
 
@@ -320,17 +323,17 @@ public partial class Player : Node2D
 		Game.Camera.AdditionalOffset += Vector2.Down * 100f;
 
 		// Camera Physics
-		float speed = Mathf.Clamp(_vel.Get().Length(), 0f, 20f) / 20f;
-		Game.Camera.AdditionalZoom = -(0.31f * speed);
+		// float speed = Mathf.Clamp(_vel.Get().Length(), 0f, 20f) / 20f;
+		// Game.Camera.AdditionalZoom = -(0.31f * speed);
 
 		return _isGrounded ? (int)States.Normal : (int)States.Dive;
 	}
 
 	private void DivePhysics()
 	{
-		Vector2 vel = _vel.GetClear();
-		_rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
-		_rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
+		// Vector2 vel = _vel.GetClear();
+		// _rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
+		// _rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
 	}
 
 	private void DiveExit()
@@ -338,7 +341,7 @@ public partial class Player : Node2D
 		if (_diveHop)
 			DiveHop();
 		else
-			_vel.Set(Vector2.Up * HopForce * 1f);
+			// _vel.Set(Vector2.Up * HopForce * 1f);
 
 		_diveCooldownTimer.Start();
 
@@ -360,7 +363,7 @@ public partial class Player : Node2D
 		else
 			dir = _diveHopDir * dist;
 
-		_vel.Set(dir);
+		// _vel.Set(dir);
 	}
 
 	// HELPER STUFF
@@ -403,15 +406,15 @@ public partial class Player : Node2D
 			}
 		}
 
-		_vel.SetX(0f);
+		// _vel.SetX(0f);
 	}
 
 	private void OnCollideV(KinematicCollision2D coll)
 	{
-		if (Calc.FloatEquals(_vel.Y, 0f))
+		// if (Calc.FloatEquals(_vel.Y, 0f))
 			return;
 
-		_vel.SetY(0f);
+		// _vel.SetY(0f);
 	}
 
 	// GROUND STUFF
