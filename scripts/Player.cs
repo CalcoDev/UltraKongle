@@ -202,7 +202,7 @@ public partial class Player : Node2D
 		}
 
 		// Hop
-		if (_hopBuffer.TimeLeft > 0 && (IsClimbing || (!_isDiveHopping && _isGrounded))) // Hop
+		if (!_isJumping && _hopBuffer.TimeLeft > 0 && (IsClimbing || (!_isDiveHopping && _isGrounded))) // Hop
 		{
 			_isJumping = true;
 			_vel.SetY(-HopForce);
@@ -234,6 +234,9 @@ public partial class Player : Node2D
 	private void NormalPhysics()
 	{
 		Vector2 vel = _vel.GetClear();
+
+		GD.Print($"VEL {vel}");
+
 		_rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
 		_rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
 	}
@@ -262,7 +265,14 @@ public partial class Player : Node2D
 		_line.Visible = false;
 
 		Vector2 force = _line.Points[1] - _line.Points[0];
-		force /= 24;
+		force /= 29;
+		// GD.Print($"FORCE: {force}");
+
+		const float maxForce = 30;
+		if (force.Length() > maxForce)
+			force = force.Normalized() * maxForce;
+
+		// force *= new Vector2(1f, 3f);
 
 		_vel.Set(force);
 	}
@@ -377,13 +387,17 @@ public partial class Player : Node2D
 		// 	return;
 
 		// Wall Cling
-		Vector2 normal = coll.GetNormal();
-		// 90 deg radians
-		if (Calc.FloatEquals(normal.Y, 0f) && Mathf.Abs(normal.X) > 0f && coll.GetAngle(Vector2.Up) > 1.56f)
+		if (!_isGrounded)
 		{
-			// GD.Print($"Collided with: {coll.GetCollider()} {coll.GetAngle(Vector2.Up) > 1.56f} {coll.GetNormal()}");
-			_wallNormal = normal;
-			_isNextToWall = true;
+			Vector2 normal = coll.GetNormal();
+			// 90 deg radians
+			if (Calc.FloatEquals(normal.Y, 0f) && Mathf.Abs(normal.X) > 0f &&
+			    coll.GetAngle(Vector2.Up) > 1.56f)
+			{
+				// GD.Print($"Collided with: {coll.GetCollider()} {coll.GetAngle(Vector2.Up) > 1.56f} {coll.GetNormal()}");
+				_wallNormal = normal;
+				_isNextToWall = true;
+			}
 		}
 
 		_vel.SetX(0f);
