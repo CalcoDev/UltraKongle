@@ -276,6 +276,16 @@ public partial class Player : Node2D
 		// 	Mathf.Clamp(force.Y, -maxForce, maxForce)
 		// );
 
+		var ssign = Mathf.Sign(force.X);
+		var angle = Mathf.Abs(force.AngleTo(Vector2.Up));
+		GD.Print($"JOHN XINA ANGLE: {Mathf.RadToDeg(angle)}");
+		if (angle < Mathf.DegToRad(85) && angle > Mathf.DegToRad(60))
+		{
+			var deg = Mathf.DegToRad( 25f ) * -ssign;
+			force = force.Rotated(deg);
+			GD.Print($"JNMH DC X: {force} | {_isGrounded}");
+		}
+
 		var ratio = force.Y / force.X;
 		GD.Print($"ASDASDA: {force}");
 		if (Mathf.Abs(force.X) > maxForceX)
