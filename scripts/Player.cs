@@ -235,8 +235,6 @@ public partial class Player : Node2D
 	{
 		Vector2 vel = _vel.GetClear();
 
-		GD.Print($"VEL {vel}");
-
 		_rb.MoveX(vel.X * 60f * Game.FixedTime, OnCollideH);
 		_rb.MoveY(vel.Y * 60f * Game.FixedTime, OnCollideV);
 	}
@@ -266,11 +264,16 @@ public partial class Player : Node2D
 
 		Vector2 force = _line.Points[1] - _line.Points[0];
 		force /= 29;
-		// GD.Print($"FORCE: {force}");
 
-		const float maxForce = 30;
-		if (force.Length() > maxForce)
-			force = force.Normalized() * maxForce;
+		const float maxForce = 7;
+		// if (force.Length() > maxForce)
+		// 	force = force.Normalized() * maxForce;
+
+		force = new Vector2(
+			Mathf.Clamp(force.X, -maxForce, maxForce),
+			Mathf.Clamp(force.Y, -maxForce, maxForce)
+		);
+		GD.Print($"FORCE: {force}");
 
 		// force *= new Vector2(1f, 3f);
 
