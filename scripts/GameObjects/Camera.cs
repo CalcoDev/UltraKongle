@@ -1,22 +1,21 @@
-﻿using Godot;
+using Godot;
 using KongleJam.Managers;
 
-namespace KongleJam.Components;
+namespace KongleJam.GameObjects;
 
-public partial class CameraComponent : Camera2D
+public partial class Camera : Camera2D
 {
-    [Export] private Node2D Follow;
+	[Export] public Node2D Follow;
 
-    [Export] public bool MouseOffset { get; set; } = true;
-    [Export] private float MouseOffsetDist = 100f;
-    [Export] private float PositionLerpSpeed = 2f;
-    [Export] private float ZoomLerpSpeed = 2f;
+    [Export] public float PositionLerpSpeed = 2f;
+    [Export] public float ZoomLerpSpeed = 2f;
 
-    [Export] private bool Static = false;
+    [Export] public bool Static = false;
 
-    public Vector2 AdditionalOffset { get; set; }
-    public float CZoom { get; set; } = 1f;
-    public float AdditionalZoom { get; set; } = 0f;
+    public new Vector2 Offset;
+
+    public float ZoomScaled = 1f;
+    public float AdditionalZoom = 0f;
 
     private FastNoiseLite _noise = new();
 
@@ -42,20 +41,15 @@ public partial class CameraComponent : Camera2D
             return;
 
         // Zoom
-        Vector2 targetZoom = new Vector2(CZoom + AdditionalZoom, CZoom + AdditionalZoom);
+        Vector2 targetZoom = new Vector2(ZoomScaled + AdditionalZoom, ZoomScaled + AdditionalZoom);
         AdditionalZoom = 0f;
         Zoom = Zoom.Lerp(targetZoom, Game.DeltaTime * ZoomLerpSpeed);
 
         // Position
-        Vector2 targetPos = Follow.Position + AdditionalOffset;
-        AdditionalOffset = Vector2.Zero;
-        if (MouseOffset)
-        {
-            var s1 = GetViewport().GetVisibleRect().Size * 1 / Zoom;
-            var scaled = GetLocalMousePosition() / s1;
-            targetPos += MouseOffsetDist * 2f * scaled;
-        }
+        Vector2 targetPos = Follow.Position + Offset;
+        Offset = Vector2.Zero;
 
+        // Shake
         if (_shakeFade)
             _noiseStrength = Mathf.Lerp(_noiseStrength, 0, _shakeDecay * Game.DeltaTime);
         else

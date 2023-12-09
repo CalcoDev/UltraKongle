@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c352688d6tu81"]
+
+[ext_resource type="Script" path="res://scripts/Components/InterpolationComponent.cs" id="1_x43qq"]
+
+[node name="InterpolationComponent" type="Node"]
+script = ExtResource("1_x43qq")

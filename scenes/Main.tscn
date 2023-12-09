@@ -1,8 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=13 format=3 uid="uid://cfas0332xrlnc"]
 
+[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
 [ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="2_b3ppq"]
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="2_gp38v"]
+[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="4_5ecr1"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="4_vjpmf"]
 [ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="5_kksbf"]
 
@@ -24,10 +26,19 @@ shader_parameter/u_offset = 0.73
 shader_parameter/u_inner_radius = 0.2
 shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
+friction = 0.8
+bounce = 0.4
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gn0bn"]
+radius = 4.0
+
 [node name="Main" type="Node2D"]
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
 position = Vector2(160, 90)
+script = ExtResource("1_22qnp")
+Follow = NodePath("../Player")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 visible = false
@@ -41,9 +52,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Player" type="Node2D" parent="."]
+[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
 position = Vector2(142, 99)
 script = ExtResource("2_b3ppq")
+_rb = NodePath("RigidBody2D")
+
+[node name="InterpolationComponent" parent="Player" node_paths=PackedStringArray("Follow", "Follower") instance=ExtResource("4_5ecr1")]
+Follow = NodePath("../RigidBody2D")
+Follower = NodePath("../Interpolated")
+
+[node name="Interpolated" type="Node2D" parent="Player"]
 
 [node name="Visuals" type="Node2D" parent="Player"]
 
@@ -65,3 +83,13 @@ centered = false
 position = Vector2(-4, -13)
 texture = ExtResource("5_kksbf")
 centered = false
+
+[node name="RigidBody2D" type="RigidBody2D" parent="Player"]
+collision_layer = 2
+physics_material_override = SubResource("PhysicsMaterial_oeg8w")
+lock_rotation = true
+continuous_cd = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
+position = Vector2(1, -1)
+shape = SubResource("CircleShape2D_gn0bn")

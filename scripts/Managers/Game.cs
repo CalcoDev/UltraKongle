@@ -1,5 +1,6 @@
 ﻿using Godot;
 using KongleJam.Components;
+using KongleJam.GameObjects;
 
 namespace KongleJam.Managers;
 
@@ -10,7 +11,7 @@ public partial class Game : Node
     public static float DeltaTime { get; private set; }
     public static float FixedTime { get; private set; }
 
-    public static CameraComponent Camera { get; set; }
+    public static Camera Camera { get; set; }
 
     public override void _EnterTree()
     {

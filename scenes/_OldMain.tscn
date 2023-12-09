@@ -1,7 +1,7 @@
 [gd_scene load_steps=18 format=3 uid="uid://5a6i8oo00xwd"]
 
 [ext_resource type="Script" path="res://scripts/Player.cs" id="1_1pkst"]
-[ext_resource type="Script" path="res://scripts/Components/CameraComponent.cs" id="1_cnod1"]
+[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_cnod1"]
 [ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="2_m58tf"]
 [ext_resource type="PackedScene" uid="uid://c2uvefidrt3fg" path="res://scenes/Components/state_machine_component.tscn" id="3_24huv"]
 [ext_resource type="Script" path="res://addons/smoothing/smoothing_2d.gd" id="4_t2iwo"]
@@ -61,7 +61,6 @@ sources/0 = SubResource("TileSetAtlasSource_2wgjx")
 [node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
 script = ExtResource("1_cnod1")
 Follow = NodePath("../Player/Smoothing2D")
-MouseOffsetDist = 50.0
 Static = true
 
 [node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb", "_sm", "_groundChecker", "_leftWallChecker", "_rightWallChecker", "_line", "_hopBuffer", "_diveCooldownTimer", "_diveHopTimer")]

@@ -303,7 +303,7 @@ public partial class SlingyPlayer : Node2D
 			_diveHop = true;
 		}
 
-		Game.Camera.AdditionalOffset += Vector2.Down * 100f;
+		Game.Camera.Offset += Vector2.Down * 100f;
 
 		// Camera Physics
 		float speed = Mathf.Clamp(_vel.Get().Length(), 0f, 20f) / 20f;

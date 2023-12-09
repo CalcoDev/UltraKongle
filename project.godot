@@ -13,7 +13,7 @@ config_version=5
 config/name="UltraKongle"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
-run/max_fps=120
+run/max_fps=240
 
 [display]
 
@@ -87,9 +87,11 @@ fullscreen={
 
 [physics]
 
-common/physics_ticks_per_second=120
-2d/default_gravity=450.0
+2d/default_gravity=400.0
 
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+textures/default_filters/use_nearest_mipmap_filter=true
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true

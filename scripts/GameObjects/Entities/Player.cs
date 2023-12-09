@@ -1,4 +1,5 @@
 using Godot;
+using KongleJam.Managers;
 using Key = KongleJam.Utils.Key;
 
 namespace KongleJam.GameObjects.Entities;
@@ -14,9 +15,14 @@ public partial class Player : Node2D
 
     private const float YeetMaxDist = 100;
     private const float YeetMaxDistShow = 25;
-    private const float YeetMaxForce = 200;
+    private const float YeetMaxForce = 300;
+
+    private const float YeetMouseCamOffsetDist = 200;
 
     // Refs
+    // private RigidBody2D _rb;
+
+    private Node2D _interpolated;
     private Node2D _visuals;
 
     private Node2D _blob;
@@ -31,9 +37,11 @@ public partial class Player : Node2D
     // Yeeting
     private Vector2 _yeetDragStart;
     private Vector2 _yeetDragEnd;
+    private bool _faceVelocity = true;
 
     public override void _Ready()
     {
+        _interpolated = GetNode<Node2D>("Interpolated");
         _visuals = GetNode<Node2D>("Visuals");
         _blob = GetNode<Node2D>("Blob");
         _arrow = GetNode<Node2D>("Arrow");
@@ -41,11 +49,20 @@ public partial class Player : Node2D
 
     public override void _Process(double delta)
     {
+        // Input
         _iYeet.Update("yeet");
 
+        // _visuals.Rotation = 0;
+
+        // Interpolated
+        // _visuals.GlobalPosition = _interpolated.GlobalPosition;
+        GlobalPosition = _interpolated.GlobalPosition;
+
+        // Yeeting
         if (_iYeet.Pressed)
         {
             _isYeeting = true;
+            _faceVelocity = false;
             _yeetDragStart = GetGlobalMousePosition();
 
             _blob.Visible = true;
@@ -54,7 +71,11 @@ public partial class Player : Node2D
 
         if (_isYeeting)
         {
-            QueueRedraw();
+            // Camera Offset
+            var screenSize = GetViewport().GetVisibleRect().Size * 1 / Game.Camera.Zoom;
+            var scaledMousePos = GetLocalMousePosition() / screenSize;
+            Game.Camera.Offset += YeetMouseCamOffsetDist * 2f * scaledMousePos;
+
             _yeetDragEnd = GetGlobalMousePosition();
             Vector2 offset = _yeetDragStart - _yeetDragEnd;
 
@@ -70,12 +91,21 @@ public partial class Player : Node2D
             if (_iYeet.Released)
             {
                 _isYeeting = false;
+                _faceVelocity = true;
                 _blob.Visible = false;
                 _arrow.Visible = false;
 
                 Vector2 dir = offset.Normalized();
+                _rb.LinearVelocity = Vector2.Zero;
                 _rb.ApplyImpulse(dir * t * YeetMaxForce);
             }
+
+            QueueRedraw();
+        }
+
+        if (_faceVelocity)
+        {
+            _visuals.Rotation = -_rb.LinearVelocity.AngleTo(Vector2.Up);
         }
     }
 
