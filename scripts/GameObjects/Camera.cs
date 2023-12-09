@@ -66,6 +66,7 @@ public partial class Camera : Camera2D
         }
 
         Position = Position.Lerp(targetPos, Game.DeltaTime * PositionLerpSpeed);
+        GD.Print($"target: {targetPos}, self: {Position}");
     }
 
     public void ShakeTime(float speed, float strength, float time)

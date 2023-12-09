@@ -1,17 +1,26 @@
-[gd_scene load_steps=13 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=25 format=3 uid="uid://cfas0332xrlnc"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
 [ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="2_b3ppq"]
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="2_gp38v"]
+[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_1lb1s"]
 [ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="4_5ecr1"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="4_vjpmf"]
 [ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="5_kksbf"]
+[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_ltxpe"]
+[ext_resource type="Texture2D" uid="uid://ctlglvjbnh8r7" path="res://assets/art/ui/ui_dialogue_sprite.png" id="8_jbyhr"]
+[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="9_jtcfg"]
+[ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="10_5r4yq"]
+[ext_resource type="Texture2D" uid="uid://cnelj20iekfyf" path="res://assets/art/ui/speakers/ui_speaker_kongle.png" id="10_axmtb"]
+[ext_resource type="Script" path="res://scripts/Managers/DialogueManager.cs" id="11_rxy5x"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_dknk5"]
-frequency = 0.0123
-fractal_type = 3
-cellular_distance_function = 1
+noise_type = 2
+frequency = 0.0167
+fractal_octaves = 1
+cellular_jitter = 0.125
+cellular_return_type = 0
 domain_warp_amplitude = 24.88
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ku64f"]
@@ -22,9 +31,17 @@ noise = SubResource("FastNoiseLite_dknk5")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wff7o"]
 shader = ExtResource("1_ysx5e")
 shader_parameter/u_center = Vector2(0, 0)
-shader_parameter/u_offset = 0.73
-shader_parameter/u_inner_radius = 0.2
+shader_parameter/u_offset = 0.435
+shader_parameter/u_inner_radius = 0.045
 shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
+
+[sub_resource type="Resource" id="Resource_tjigg"]
+script = ExtResource("5_ltxpe")
+Speaker = ExtResource("4_1lb1s")
+Message = "Yo yo yo.
+I am Kongle."
+AutoPlay = false
+PlaybackSpeedMult = 1.0
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
 friction = 0.8
@@ -33,17 +50,70 @@ bounce = 0.4
 [sub_resource type="CircleShape2D" id="CircleShape2D_gn0bn"]
 radius = 4.0
 
+[sub_resource type="Animation" id="Animation_o64fk"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("UI/DialogueBackground:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(26, 97)]
+}
+
+[sub_resource type="Animation" id="Animation_hdn61"]
+resource_name = "enter"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("UI/DialogueBackground:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(26, 221), Vector2(26, 97)]
+}
+
+[sub_resource type="Animation" id="Animation_bw7i1"]
+resource_name = "exit"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("UI/DialogueBackground:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(26, 97), Vector2(26, 221)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_iphye"]
+_data = {
+"RESET": SubResource("Animation_o64fk"),
+"enter": SubResource("Animation_hdn61"),
+"exit": SubResource("Animation_bw7i1")
+}
+
 [node name="Main" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
-position = Vector2(160, 90)
+position = Vector2(161, 90)
 script = ExtResource("1_22qnp")
 Follow = NodePath("../Player")
+Static = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-visible = false
+[node name="BlackHole" type="CanvasLayer" parent="."]
+layer = -1
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+[node name="Pass1" type="ColorRect" parent="BlackHole"]
 texture_filter = 1
 material = SubResource("ShaderMaterial_wff7o")
 anchors_preset = 15
@@ -53,8 +123,9 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
-position = Vector2(142, 99)
+position = Vector2(108, 53)
 script = ExtResource("2_b3ppq")
+DIALOGUE = SubResource("Resource_tjigg")
 _rb = NodePath("RigidBody2D")
 
 [node name="InterpolationComponent" parent="Player" node_paths=PackedStringArray("Follow", "Follower") instance=ExtResource("4_5ecr1")]
@@ -93,3 +164,63 @@ continuous_cd = 1
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
 position = Vector2(1, -1)
 shape = SubResource("CircleShape2D_gn0bn")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("10_5r4yq")
+
+[node name="DialogueManager" type="Node" parent="." node_paths=PackedStringArray("_anim", "_dialogueControl", "_speakerSprite", "_text")]
+script = ExtResource("11_rxy5x")
+_anim = NodePath("AnimationPlayer")
+_dialogueControl = NodePath("UI/DialogueBackground")
+_speakerSprite = NodePath("UI/DialogueBackground/TextureRect")
+_text = NodePath("UI/DialogueBackground/MarginContainer/Label")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="DialogueManager"]
+libraries = {
+"": SubResource("AnimationLibrary_iphye")
+}
+
+[node name="UI" type="CanvasLayer" parent="DialogueManager"]
+
+[node name="DialogueBackground" type="TextureRect" parent="DialogueManager/UI"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -134.0
+offset_top = -83.0
+offset_right = 134.0
+offset_bottom = -3.99976
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 4
+texture = ExtResource("8_jbyhr")
+
+[node name="MarginContainer" type="MarginContainer" parent="DialogueManager/UI/DialogueBackground"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Label" type="Label" parent="DialogueManager/UI/DialogueBackground/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_fonts/font = ExtResource("9_jtcfg")
+theme_override_font_sizes/font_size = 16
+text = "uwu I am kowongle"
+
+[node name="TextureRect" type="TextureRect" parent="DialogueManager/UI/DialogueBackground"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = -46.0
+offset_right = 64.0
+offset_bottom = 2.0
+texture = ExtResource("10_axmtb")

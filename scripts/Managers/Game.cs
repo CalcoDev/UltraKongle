@@ -1,6 +1,7 @@
 ﻿using Godot;
 using KongleJam.Components;
 using KongleJam.GameObjects;
+using KongleJam.Resources;
 
 namespace KongleJam.Managers;
 
@@ -13,6 +14,8 @@ public partial class Game : Node
 
     public static Camera Camera { get; set; }
 
+    public DialogueManager Dialogue { get; set; }
+
     public override void _EnterTree()
     {
         if (Instance == null)
@@ -22,6 +25,16 @@ public partial class Game : Node
             GD.PrintErr("ERROR: Game Manager already exists!");
             QueueFree();
         }
+    }
+
+    public override void _Ready()
+    {
+        Instance.Dialogue.OnDialogueFinished += dialogue =>
+        {
+            if (dialogue.Next == null)
+                GD.Print("GAME: ANIM ENDED");
+                // SetTimeScale(1);
+        };
     }
 
     public override void _Process(double delta)
@@ -40,6 +53,13 @@ public partial class Game : Node
 
         DeltaTime = (float)GetProcessDeltaTime();
         FixedTime = (float)GetPhysicsProcessDeltaTime();
+    }
+
+    public static void PlayDialogue(Dialogue dialogue)
+    {
+        // SetTimeScale(0);
+        GD.Print("GAME: ANIM BEGAN");
+        Instance.Dialogue.StartDialogue(dialogue);
     }
 
     private static Tween timeTween;

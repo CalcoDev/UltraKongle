@@ -21,11 +21,30 @@ void fragment() {
 	vec2 spiral_uv = vec2(polar_uv.x + polar_uv.y, polar_uv.y + TIME * u_offset);
 	float d = length(uv);
 	
-	vec3 col_dist = d < u_inner_radius ? vec3(0.0) : vec3(1.0);
-	float col_spiral = texture(NOISE, fract(spiral_uv)).x;
-	vec3 col = col_dist * vec3(step(0.2, col_spiral));
-	
-	
+	vec3 col;
+	if (d < u_inner_radius) {
+		col = vec3(
+			0.25098039215686274,
+			0.15294117647058825,
+			0.3176470588235294
+		);
+	} else {
+		float col_spiral = texture(NOISE, fract(spiral_uv)).x;
+		bool streak = (step(0.1, col_spiral) > 0.5f);
+		if (!streak) {
+			col = vec3(
+				0.25098039215686274,
+				0.15294117647058825,
+				0.3176470588235294
+			);
+		} else {
+			col = vec3(
+				0.03529411764705882,
+				0.0392156862745098,
+				0.0784313725490196
+			);
+		}
+	}
 	
 	COLOR = vec4(col, 1.0);
 }

@@ -1,11 +1,14 @@
 using Godot;
 using KongleJam.Managers;
+using KongleJam.Resources;
 using Key = KongleJam.Utils.Key;
 
 namespace KongleJam.GameObjects.Entities;
 
 public partial class Player : Node2D
 {
+    [Export(PropertyHint.ResourceType, "Dialogue")] private Dialogue DIALOGUE;
+
     [ExportGroup("References")]
     [Export] private RigidBody2D _rb;
 
@@ -49,6 +52,11 @@ public partial class Player : Node2D
 
     public override void _Process(double delta)
     {
+        if (Input.IsActionJustPressed("hop"))
+        {
+            Game.PlayDialogue(DIALOGUE);
+        }
+
         // Input
         _iYeet.Update("yeet");
 
@@ -74,7 +82,7 @@ public partial class Player : Node2D
             // Camera Offset
             var screenSize = GetViewport().GetVisibleRect().Size * 1 / Game.Camera.Zoom;
             var scaledMousePos = GetLocalMousePosition() / screenSize;
-            Game.Camera.Offset += YeetMouseCamOffsetDist * 2f * scaledMousePos;
+            // Game.Camera.Offset += YeetMouseCamOffsetDist * 2f * scaledMousePos;
 
             _yeetDragEnd = GetGlobalMousePosition();
             Vector2 offset = _yeetDragStart - _yeetDragEnd;
