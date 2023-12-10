@@ -41,7 +41,7 @@ Speaker = ExtResource("4_1lb1s")
 Message = "Yo yo yo.
 I am Kongle."
 AutoPlay = false
-PlaybackSpeedMult = 1.0
+PlaybackSpeedMult = 2.0
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
 friction = 0.8
@@ -50,62 +50,64 @@ bounce = 0.4
 [sub_resource type="CircleShape2D" id="CircleShape2D_gn0bn"]
 radius = 4.0
 
-[sub_resource type="Animation" id="Animation_o64fk"]
+[sub_resource type="Animation" id="Animation_6vuem"]
+resource_name = "enter"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("DialogueBackground:scale")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 0), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_ypf10"]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("UI/DialogueBackground:position")
+tracks/0/path = NodePath("DialogueBackground:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(26, 97)]
+"values": [Vector2(1, 1)]
 }
 
-[sub_resource type="Animation" id="Animation_hdn61"]
-resource_name = "enter"
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("UI/DialogueBackground:position")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 1),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(26, 221), Vector2(26, 97)]
-}
-
-[sub_resource type="Animation" id="Animation_bw7i1"]
+[sub_resource type="Animation" id="Animation_h2pot"]
 resource_name = "exit"
+length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("UI/DialogueBackground:position")
+tracks/0/path = NodePath("DialogueBackground:scale")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 1),
+"times": PackedFloat32Array(0, 0.3),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(26, 97), Vector2(26, 221)]
+"values": [Vector2(1, 1), Vector2(1, 0)]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_iphye"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_344y0"]
 _data = {
-"RESET": SubResource("Animation_o64fk"),
-"enter": SubResource("Animation_hdn61"),
-"exit": SubResource("Animation_bw7i1")
+"RESET": SubResource("Animation_ypf10"),
+"enter": SubResource("Animation_6vuem"),
+"exit": SubResource("Animation_h2pot")
 }
 
 [node name="Main" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
-position = Vector2(161, 90)
+position = Vector2(240, 135)
 script = ExtResource("1_22qnp")
 Follow = NodePath("../Player")
 Static = true
@@ -128,9 +130,7 @@ script = ExtResource("2_b3ppq")
 DIALOGUE = SubResource("Resource_tjigg")
 _rb = NodePath("RigidBody2D")
 
-[node name="InterpolationComponent" parent="Player" node_paths=PackedStringArray("Follow", "Follower") instance=ExtResource("4_5ecr1")]
-Follow = NodePath("../RigidBody2D")
-Follower = NodePath("../Interpolated")
+[node name="InterpolationComponent" parent="Player" instance=ExtResource("4_5ecr1")]
 
 [node name="Interpolated" type="Node2D" parent="Player"]
 
@@ -170,17 +170,18 @@ script = ExtResource("10_5r4yq")
 
 [node name="DialogueManager" type="Node" parent="." node_paths=PackedStringArray("_anim", "_dialogueControl", "_speakerSprite", "_text")]
 script = ExtResource("11_rxy5x")
-_anim = NodePath("AnimationPlayer")
+_anim = NodePath("UI/AnimationPlayer")
 _dialogueControl = NodePath("UI/DialogueBackground")
 _speakerSprite = NodePath("UI/DialogueBackground/TextureRect")
 _text = NodePath("UI/DialogueBackground/MarginContainer/Label")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="DialogueManager"]
-libraries = {
-"": SubResource("AnimationLibrary_iphye")
-}
+BaseSpeed = 10.0
 
 [node name="UI" type="CanvasLayer" parent="DialogueManager"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="DialogueManager/UI"]
+libraries = {
+"": SubResource("AnimationLibrary_344y0")
+}
 
 [node name="DialogueBackground" type="TextureRect" parent="DialogueManager/UI"]
 anchors_preset = 7
@@ -189,11 +190,12 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -134.0
-offset_top = -83.0
+offset_top = -87.0
 offset_right = 134.0
-offset_bottom = -3.99976
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
+pivot_offset = Vector2(134, 39)
 size_flags_horizontal = 4
 texture = ExtResource("8_jbyhr")
 

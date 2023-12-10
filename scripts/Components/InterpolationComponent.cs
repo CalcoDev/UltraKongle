@@ -25,6 +25,9 @@ public partial class InterpolationComponent : Node
     {
         ProcessPriority = 100;
 
+        if (Follower == null || Follow == null)
+            return;
+
         if (FollowerTopLevel)
             Follower.TopLevel = true;
 
@@ -34,6 +37,9 @@ public partial class InterpolationComponent : Node
 
     public override void _Process(double delta)
     {
+        if (Follower == null || Follow == null)
+            return;
+
         float t = (float)Engine.GetPhysicsInterpolationFraction();
 
         Transform2D tr = Transform2D.Identity;
@@ -46,6 +52,9 @@ public partial class InterpolationComponent : Node
 
     public override void _PhysicsProcess(double delta)
     {
+        if (Follower == null || Follow == null)
+            return;
+
         _prevTransform = _currTransform;
         _currTransform = UseGlobalTransform
             ? Follow.GlobalTransform
