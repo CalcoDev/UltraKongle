@@ -6,11 +6,15 @@ namespace KongleJam.Managers;
 
 public partial class DialogueManager : Node
 {
+    [Serializable]
     private enum State
     {
+        EnterAnimation,
+        ExitAnimation,
+        Switching,
         Playing,
         Finished,
-        Idle
+        Idle,
     }
 
     [ExportGroup("References")]
@@ -22,7 +26,7 @@ public partial class DialogueManager : Node
     [ExportGroup("Settings")]
     [Export] public float BaseSpeed;
 
-    private State _state;
+    [Export] private State _state;
     private Dialogue _dialogue;
     private float _index;
 
@@ -39,17 +43,13 @@ public partial class DialogueManager : Node
         _anim.AnimationFinished += OnAnimFinished;
 
         _anim.Play("exit");
-        _state = State.Finished;
+        _state = State.Idle;
     }
 
     public override void _Process(double delta)
     {
         switch (_state)
         {
-            case State.Idle:
-            {
-                return;
-            }
             case State.Finished:
             {
                 if (_dialogue == null)
@@ -64,10 +64,13 @@ public partial class DialogueManager : Node
                 if (next)
                 {
                     if (_dialogue.Next != null)
+                    {
+                        _state = State.Switching;
                         StartDialogue(_dialogue.Next);
+                    }
                     else
                     {
-                        _state = State.Idle;
+                        _state = State.ExitAnimation;
                         _anim.Play("exit");
                     }
                 }
@@ -93,26 +96,50 @@ public partial class DialogueManager : Node
                 return;
             }
             default:
-                throw new ArgumentOutOfRangeException();
+                return;
         }
     }
 
     public void StartDialogue(Dialogue dialogue)
     {
         _speakerSprite.Texture = dialogue.Speaker.Texture;
-        _dialogue = dialogue;
         _index = 0f;
         _text.Text = "";
 
-        if (_state != State.Playing)
-            _anim.Play("enter");
+        switch (_state)
+        {
+            case State.Switching when _dialogue?.Speaker != dialogue.Speaker:
+                _anim.Play("exit");
+                break;
+            case State.Switching when _dialogue?.Speaker == dialogue.Speaker:
+                _state = State.Playing;
+                break;
+            case State.Idle:
+                _anim.Play("enter");
+                _state = State.EnterAnimation;
+                break;
+            default:
+                GD.PrintErr($"Tried playing a dialogue while not idle! State {_state}");
+                break;
+        }
+
+        _dialogue = dialogue;
     }
 
     private void OnAnimFinished(StringName name)
     {
         if (name == "enter")
+        {
             _state = State.Playing;
+        }
         else if (name == "exit" && _dialogue != null)
+        {
+            if (_state == State.Switching)
+                _anim.Play("enter");
+            else
+                _state = State.Idle;
+
             EmitSignal(SignalName.OnDialogueFinished, _dialogue);
+        }
     }
 }

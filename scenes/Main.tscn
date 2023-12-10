@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=26 format=3 uid="uid://cfas0332xrlnc"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
@@ -35,6 +35,13 @@ shader_parameter/u_offset = 0.435
 shader_parameter/u_inner_radius = 0.045
 shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
 
+[sub_resource type="Resource" id="Resource_2hky5"]
+script = ExtResource("5_ltxpe")
+Speaker = ExtResource("4_1lb1s")
+Message = "This is my second message!"
+AutoPlay = false
+PlaybackSpeedMult = 1.0
+
 [sub_resource type="Resource" id="Resource_tjigg"]
 script = ExtResource("5_ltxpe")
 Speaker = ExtResource("4_1lb1s")
@@ -42,6 +49,7 @@ Message = "Yo yo yo.
 I am Kongle."
 AutoPlay = false
 PlaybackSpeedMult = 2.0
+Next = SubResource("Resource_2hky5")
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
 friction = 0.8
