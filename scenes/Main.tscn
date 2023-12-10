@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=27 format=3 uid="uid://cfas0332xrlnc"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="2_gp38v"]
 [ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_1lb1s"]
 [ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="4_5ecr1"]
+[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="4_447wg"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="4_vjpmf"]
 [ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="5_kksbf"]
 [ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_ltxpe"]
@@ -37,8 +38,9 @@ shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
 
 [sub_resource type="Resource" id="Resource_2hky5"]
 script = ExtResource("5_ltxpe")
-Speaker = ExtResource("4_1lb1s")
-Message = "This is my second message!"
+Speaker = ExtResource("4_447wg")
+Message = "I am thje milkmam.
+Milk is delicious."
 AutoPlay = false
 PlaybackSpeedMult = 1.0
 

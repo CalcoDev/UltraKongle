@@ -102,9 +102,12 @@ public partial class DialogueManager : Node
 
     public void StartDialogue(Dialogue dialogue)
     {
-        _speakerSprite.Texture = dialogue.Speaker.Texture;
         _index = 0f;
         _text.Text = "";
+
+        if (_state != State.Switching || _dialogue?.Speaker == dialogue.Speaker)
+            if (dialogue.Speaker != null)
+                _speakerSprite.Texture = dialogue.Speaker.Texture;
 
         switch (_state)
         {
@@ -135,7 +138,10 @@ public partial class DialogueManager : Node
         else if (name == "exit" && _dialogue != null)
         {
             if (_state == State.Switching)
+            {
                 _anim.Play("enter");
+                _speakerSprite.Texture = _dialogue.Speaker.Texture;
+            }
             else
                 _state = State.Idle;
 

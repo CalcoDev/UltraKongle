@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="Speaker" load_steps=3 format=3 uid="uid://cqpaebco8y8ru"]
+
+[ext_resource type="Script" path="res://scripts/Resources/Speaker.cs" id="1_cjltg"]
+[ext_resource type="Texture2D" uid="uid://cknnal7y2gnci" path="res://assets/art/ui/speakers/ui_speaker_laitier.png" id="1_mbyeu"]
+
+[resource]
+script = ExtResource("1_cjltg")
+Name = "Le Laitier"
+Texture = ExtResource("1_mbyeu")
