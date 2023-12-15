@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using Godot;
 
 namespace KongleJam.Networking;
 
@@ -68,6 +69,7 @@ public class Server : Peer
     protected override void HandleReceivedData(byte[] data, IPEndPoint sender,
         MessageType type)
     {
+        GD.Print($"Received data from {sender.ToString()}");
         if (data.Length == 0)
             return;
 

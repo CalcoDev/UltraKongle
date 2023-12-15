@@ -13,7 +13,7 @@ public partial class NetworkManager : Node
 
     public static NetworkManager Instance { get; private set; }
 
-    private readonly Dictionary<int, NetworkPlayer> _players = new();
+    public Dictionary<int, NetworkPlayer> Players;
 
     private Server? _server;
     private Client? _client;
@@ -21,7 +21,10 @@ public partial class NetworkManager : Node
     public override void _EnterTree()
     {
         if (Instance == null)
+        {
             Instance = this;
+            Players = new Dictionary<int, NetworkPlayer>();
+        }
         else
         {
             GD.PrintErr("ERROR: Network Manager already exists!");
@@ -31,7 +34,7 @@ public partial class NetworkManager : Node
 
     public NetworkPlayer GetPlayerData(int id)
     {
-        return _players[id];
+        return Players[id];
     }
 
     public bool IsSelf(int id)
@@ -59,15 +62,17 @@ public partial class NetworkManager : Node
             return "ayo cannot do that";
     }
 
-    public void StartServer(Action onStartedCallback)
-    {
+    public void StartServer(
+        Action onStartedCallback,
+        Action onClientsChanged
+     ) {
         // if (_server != null && _server.Active)
         //     _server.Close();
         
         _server = new Server(ServerPort);
         _server.OnStartedCallback += p => {
             GD.Print($"Started server on port: {p}!");
-            _players.Clear();
+            Players.Clear();
             onStartedCallback();
 
             GetTree().CreateTimer(0.5f).Connect(
@@ -77,9 +82,18 @@ public partial class NetworkManager : Node
         };
         _server.OnClientConnectedCallback += (ip, id, type) => {
             GD.Print($"{ip} connected via {type} and got id {id}!");
-            _players.TryAdd(id,
-                new NetworkPlayer { Username = $"Client {id}" }
-            );
+            NetworkPlayer player = new() { 
+                Username = $"Client {id}",
+                Id = id
+            };
+            
+            if (!Players.ContainsKey(id))
+            {
+                Players.TryAdd(id, player);
+                
+                GD.Print($"Added id {id}.");
+                onClientsChanged?.Invoke();
+            }
         };
         _server.OnClientDisconnectedCallback += (ip, id, type) => {
             GD.Print($"{ip} disconnected via {type}!");
@@ -128,7 +142,9 @@ public partial class NetworkManager : Node
         if (_client != null)
         {
             _client.OnDisconnectedCallback += (_, _) => onDisconnect();
-            _client.Disconnect();
+
+            if (_server == null || _server.Active == false)
+                _client.Disconnect();
         }
         
         if (_server != null)
@@ -136,5 +152,11 @@ public partial class NetworkManager : Node
             _server.OnClosedCallback += () => onDisconnect();
             _server.Close();
         }
+    }
+
+    public void KickPlayer(int id)
+    {
+        GD.Print($"Trying to kick {id}!");
+        // TODO(calco): Implement this lol.
     }
 }

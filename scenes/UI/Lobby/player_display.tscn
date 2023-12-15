@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dnics2hhwrmm8"]
+
+[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="1_gemr1"]
+[ext_resource type="Texture2D" uid="uid://ce3hc2srfal4e" path="res://assets/art/ui/ui_player_kick.png" id="2_adh0c"]
+
+[node name="Player" type="HBoxContainer"]
+
+[node name="Text" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("1_gemr1")
+text = "Player #1"
+
+[node name="Texture" type="TextureButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+texture_normal = ExtResource("2_adh0c")
