@@ -1,0 +1,253 @@
+[gd_scene load_steps=24 format=3 uid="uid://cyaj73bw5usvj"]
+
+[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_lb3jw"]
+[ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="2_m1v12"]
+[ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="3_x3ic4"]
+[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="4_bj1js"]
+[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_5sd1l"]
+[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="6_g3eqd"]
+[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="7_yk6gw"]
+[ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="8_levuy"]
+[ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="9_lplr6"]
+[ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="10_okkyq"]
+[ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="11_em2ex"]
+[ext_resource type="Script" path="res://scripts/UI/LobbyUI.cs" id="12_71hrq"]
+[ext_resource type="Texture2D" uid="uid://br63irgc5fws7" path="res://assets/art/ui/ui_lobby_background.png" id="12_g85pa"]
+[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="14_1rptu"]
+[ext_resource type="Texture2D" uid="uid://5k2nw6lccyup" path="res://assets/art/ui/ui_lobby_menu_btn.png" id="15_afd7b"]
+[ext_resource type="Script" path="res://scripts/Managers/NetworkManager.cs" id="16_us05y"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_dknk5"]
+noise_type = 2
+frequency = 0.0148
+fractal_octaves = 1
+cellular_jitter = 0.125
+cellular_return_type = 0
+domain_warp_amplitude = 24.88
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ku64f"]
+generate_mipmaps = false
+seamless = true
+noise = SubResource("FastNoiseLite_dknk5")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wff7o"]
+shader = ExtResource("2_m1v12")
+shader_parameter/u_center = Vector2(0, 0)
+shader_parameter/u_offset = 0.435
+shader_parameter/u_inner_radius = 0.045
+shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
+
+[sub_resource type="Resource" id="Resource_2hky5"]
+script = ExtResource("5_5sd1l")
+Speaker = ExtResource("4_bj1js")
+Message = "I am thje milkmam.
+Milk is delicious."
+AutoPlay = false
+PlaybackSpeedMult = 1.0
+
+[sub_resource type="Resource" id="Resource_tjigg"]
+script = ExtResource("5_5sd1l")
+Speaker = ExtResource("6_g3eqd")
+Message = "Yo yo yo.
+I am Kongle."
+AutoPlay = false
+PlaybackSpeedMult = 2.0
+Next = SubResource("Resource_2hky5")
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
+friction = 0.8
+bounce = 0.4
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gn0bn"]
+radius = 4.0
+
+[node name="Main" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
+position = Vector2(240, 135)
+script = ExtResource("1_lb3jw")
+Follow = NodePath("../Player")
+Static = true
+
+[node name="BlackHole" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="Pass1" type="ColorRect" parent="BlackHole"]
+texture_filter = 1
+material = SubResource("ShaderMaterial_wff7o")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
+position = Vector2(108, 53)
+script = ExtResource("3_x3ic4")
+DIALOGUE = SubResource("Resource_tjigg")
+_rb = NodePath("RigidBody2D")
+
+[node name="InterpolationComponent" parent="Player" instance=ExtResource("7_yk6gw")]
+
+[node name="Interpolated" type="Node2D" parent="Player"]
+
+[node name="Visuals" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visuals"]
+position = Vector2(-4, -7)
+texture = ExtResource("8_levuy")
+centered = false
+
+[node name="Blob" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Blob"]
+position = Vector2(-2, 8)
+texture = ExtResource("9_lplr6")
+centered = false
+
+[node name="Arrow" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Arrow"]
+position = Vector2(-4, -13)
+texture = ExtResource("10_okkyq")
+centered = false
+
+[node name="RigidBody2D" type="RigidBody2D" parent="Player"]
+collision_layer = 2
+physics_material_override = SubResource("PhysicsMaterial_oeg8w")
+lock_rotation = true
+continuous_cd = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
+position = Vector2(1, -1)
+shape = SubResource("CircleShape2D_gn0bn")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("11_em2ex")
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("12_71hrq")
+
+[node name="TextureRect" type="TextureRect" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -151.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 148.0
+grow_horizontal = 0
+size_flags_horizontal = 8
+texture = ExtResource("12_g85pa")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/TextureRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/TextureRect/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/TextureRect/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Lobby"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/TextureRect/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="CreateLobby" type="TextureButton" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = ExtResource("15_afd7b")
+
+[node name="Label" type="Label" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer/CreateLobby"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -41.0
+offset_top = -7.0
+offset_right = 41.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Create Lobby"
+
+[node name="JoinClipboard" type="TextureButton" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = ExtResource("15_afd7b")
+
+[node name="Label" type="Label" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer/JoinClipboard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -41.0
+offset_top = -7.0
+offset_right = 41.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Join Clipboard Lobby"
+
+[node name="CopyCode" type="TextureButton" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = ExtResource("15_afd7b")
+
+[node name="Label" type="Label" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer/CopyCode"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.5
+offset_top = -7.0
+offset_right = 30.5
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Copy Code"
+
+[node name="LeaveLobby" type="TextureButton" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = ExtResource("15_afd7b")
+
+[node name="Label" type="Label" parent="UI/TextureRect/MarginContainer/VBoxContainer/VBoxContainer/LeaveLobby"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.5
+offset_top = -7.0
+offset_right = 30.5
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Leave Lobby"
+
+[node name="NetworkManager" type="Node" parent="."]
+script = ExtResource("16_us05y")

@@ -29,16 +29,17 @@ public partial class Game : Node
 
     public override void _Ready()
     {
-        Instance.Dialogue.OnDialogueFinished += dialogue =>
-        {
-            if (dialogue.Next == null)
-                GD.Print("GAME: ANIM ENDED");
-                // SetTimeScale(1);
-        };
+        // Instance.Dialogue.OnDialogueFinished += dialogue =>
+        // {
+        //     if (dialogue.Next == null)
+        //         GD.Print("GAME: ANIM ENDED");
+        //         // SetTimeScale(1);
+        // };
     }
 
     public override void _Process(double delta)
     {
+        // TODO(calco): Make sure we properly unintiailize the server when quitting.
         if (Input.IsActionJustPressed("quit"))
             GetTree().Quit();
 

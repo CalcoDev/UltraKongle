@@ -82,7 +82,7 @@ public partial class DialogueManager : Node
                     _index = _dialogue.Message.Length;
 
                 _index += BaseSpeed * _dialogue.PlaybackSpeedMult * Game.DeltaTime;
-                GD.Print($"Index: {_index} out of {_dialogue.Message.Length}");
+                // GD.Print($"Index: {_index} out of {_dialogue.Message.Length}");
                 if (_index < 0f)
                     _index = 0f;
                 else if (_index > _dialogue.Message.Length)
