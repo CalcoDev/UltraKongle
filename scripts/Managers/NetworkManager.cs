@@ -16,6 +16,7 @@ public partial class NetworkManager : Node
     public static bool IsServer { get; private set; } = false;
     public static long Id { get; private set; } = -1;
     public static int PeerId { get; private set; } = -1;
+    public static long ServerPeerId { get; private set; } = -1;
     
     // Store all players
     public Dictionary<long, NetworkPlayer> Players;
@@ -32,9 +33,6 @@ public partial class NetworkManager : Node
     // Called ON THE SERVER when CLIENT connects to SERVER
     public Action OnServerConnectionsChanged;
 
-    // Called via RPC
-    public Action<NetworkPlayer[]> OnBroadcastPlayers;
-    
     private ENetMultiplayerPeer _peer;
 
     private bool _isInit = false;
@@ -68,34 +66,45 @@ public partial class NetworkManager : Node
     public override void _Ready()
     {
         Multiplayer.PeerConnected += (id) => {
-            GD.Print($"Received connection from Player {id}!");
-            Players.Add(id, new NetworkPlayer(id, $"Player {id}"));
-            OnServerConnectionsChanged?.Invoke();
+            if (IsServer)
+            {
+                GD.Print($"Server received connection from Player {id}!");
+                
+                string usrnam = $"Player {id}"; // short name to fit lol
+                Players.Add(id, new NetworkPlayer(id, usrnam));
+                OnServerConnectionsChanged?.Invoke();
 
+                RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id, Id });
+                
+                // Tell everyone about new guy
+                Rpc(MethodName.RpcSendPlayerInfo, new Variant[] { id, usrnam });
+
+                // Tell new guy about everyone
+                foreach (NetworkPlayer player in Players.Values)
+                {
+                    RpcId(
+                        id, MethodName.RpcSendPlayerInfo,
+                        new Variant[] { player.Id, player.Username }
+                    );
+                }
+            }
+            
+            // TODO(calco): Figure out where to put this
             if (!_isInit)
                 _isInit = true;
             
-            if (IsServer)
-            {
-
-                RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id });
-                Rpc(
-                    MethodName.RpcBroadcastPlayers,
-                    new Variant[] { Players.Values.ToArray() }
-                );
-            }
         };
         Multiplayer.PeerDisconnected += (id) => {
-            _isInit = false;
-
             if (IsServer)
             {
                 GD.Print($"Player {id} disconnected!");
+                
                 Players.Remove(id);
                 OnServerConnectionsChanged?.Invoke();
+                
+                // Tell everyone about old guy
+                Rpc(MethodName.RpcKickPlayer, new Variant[] { id });
             }
-
-            OnDisconnected?.Invoke();
         };
         Multiplayer.ConnectedToServer += () => {
             GD.Print("Connected to server!");
@@ -103,9 +112,10 @@ public partial class NetworkManager : Node
         };
         Multiplayer.ServerDisconnected += () => {
             GD.Print("Disconnected from server!");
+            OnDisconnected?.Invoke();
         };
         Multiplayer.ConnectionFailed += () => {
-            GD.Print("ERROR: Connection failed!");
+            GD.PrintErr("ERROR: Connection failed!");
         };
     }
 
@@ -113,6 +123,10 @@ public partial class NetworkManager : Node
     public void HostServer()
     {
         IsServer = true;
+        _isInit = false;
+        
+        Players.Clear();
+        
         _peer = new ENetMultiplayerPeer();
         var error = _peer.CreateServer(ServerPort, 4);
         if (error != Error.Ok)
@@ -128,7 +142,10 @@ public partial class NetworkManager : Node
         GD.Print("Started hosting server! Waiting for connections ...");
         
         // TODO(calco): This should not be done here.
-        Players.Add(0, new NetworkPlayer(0, "SERVER"));
+        Id = PeerId;
+        ServerPeerId = PeerId;
+        Players.Add(Id, new NetworkPlayer(Id, "SERVER"));
+        OnServerConnectionsChanged?.Invoke();
 
         OnServerStarted?.Invoke();
     }
@@ -136,6 +153,10 @@ public partial class NetworkManager : Node
     public void JoinServer(string ip)
     {
         IsServer = false;
+        _isInit = false;
+
+        Players.Clear();
+
         _peer = new ENetMultiplayerPeer();
         var error = _peer.CreateClient(ip, ServerPort);
         if (error != Error.Ok)
@@ -152,8 +173,28 @@ public partial class NetworkManager : Node
 
     public void Disconnect()
     {
-        _peer = null;
-        Multiplayer.MultiplayerPeer = null;
+        if (IsServer)
+        {
+            GD.Print($"{GetRpcFormat()} Stopping server ...");
+            foreach (NetworkPlayer player in Players.Values)
+            {
+                if (IsSelfId(player.Id))
+                    continue;
+
+                Multiplayer.MultiplayerPeer.DisconnectPeer((int) player.Id);
+            }
+            
+            GD.Print($"{GetRpcFormat()} Stopped server!");
+            OnDisconnected?.Invoke();
+            
+            _peer = null;
+            Multiplayer.MultiplayerPeer = null;
+        }
+        else
+        {
+            GD.Print($"{GetRpcFormat()} Sending disconnect packet to {ServerPeerId}!");
+            RpcId(ServerPeerId, MethodName.RpcDisconnectPlayer, new Variant[] { Id });
+        }
     }
 
     public void KickPlayer(int id)
@@ -169,15 +210,47 @@ public partial class NetworkManager : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority)]
-    private void RpcInitPlayer(long id)
+    private void RpcInitPlayer(long id, long serverId)
     {
         Id = id;
+        ServerPeerId = serverId;
         GD.Print($"{GetRpcFormat()} Initialized.");
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority)]
-    private void RpcBroadcastPlayers(NetworkPlayer[] players)
+    private void RpcSendPlayerInfo(long id, string username)
     {
-        OnBroadcastPlayers?.Invoke(players);
+        if (!Players.ContainsKey(id))
+        {
+            GD.Print($"{GetRpcFormat()} Adding player {id} {username} to list!");
+            Players.Add(id, new NetworkPlayer(id, username));
+        }
+        else
+        {
+            GD.Print($"{GetRpcFormat()} Tried adding player {id} {username} to list, but was already present!");
+        }
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority)]
+    private void RpcKickPlayer(long id)
+    {
+        if (Players.Remove(id))
+            GD.Print($"{GetRpcFormat()} Removed player {id} from players.");
+        else
+            GD.Print($"{GetRpcFormat()} Tried removing player {id} from players, but was not present.");
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+    private void RpcDisconnectPlayer(long id)
+    {
+        if (IsServer)
+        {
+            GD.Print($"{GetRpcFormat()} Disconnecting player {id}");
+            Multiplayer.MultiplayerPeer.DisconnectPeer((int) id);
+        }
+        else
+        {
+            GD.Print($"{GetRpcFormat()} Received disconnect message even though not server?!?!?!");
+        }
     }
 }

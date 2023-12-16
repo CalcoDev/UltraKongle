@@ -2,7 +2,7 @@ using Godot;
 
 namespace KongleJam.Networking.Custom;
 
-public partial class NetworkPlayer : GodotObject 
+public class NetworkPlayer
 {
     public string Username;
     public long Id;

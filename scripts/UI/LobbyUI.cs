@@ -55,8 +55,8 @@ public partial class LobbyUI : Node
         NetworkManager.Instance.OnClientConnectedToServer += () => {
             UI_ClientConnected();
         };
-        NetworkManager.Instance.OnBroadcastPlayers += (players) => {
-            UI_RefreshPlayerList(players);
+        NetworkManager.Instance.OnServerConnectionsChanged += () => {
+            UI_RefreshPlayerList();
         };
     }
 
@@ -80,10 +80,19 @@ public partial class LobbyUI : Node
     private void HandleCopyLobby()
     {
         // DisplayServer.ClipboardSet(NetworkManager.Instance.GetLobbyCopy());
+
+        GD.Print($"{NetworkManager.Id}: players");
+        foreach (NetworkPlayer player in NetworkManager.Instance.Players.Values)
+        {
+            GD.Print($"{player.Id} - {player.Username}");
+        }
+        GD.Print("DONE");
     }
 
     private void HandleLeaveLobby()
     {
+        GD.Print("LOBBY_UI: Trying to disconnect!");
+        NetworkManager.Instance.Disconnect();
     }
 
     // UI STUFF
@@ -111,7 +120,7 @@ public partial class LobbyUI : Node
         _leaveBtn.Visible = false;
     }
 
-    private void UI_RefreshPlayerList(NetworkPlayer[] players)
+    private void UI_RefreshPlayerList()
     {
         for (int i = _playerList.GetChildCount() - 1; i >= 0; ++i)
         {
@@ -120,7 +129,7 @@ public partial class LobbyUI : Node
             child.QueueFree();
         }
 
-        foreach (NetworkPlayer player in players)
+        foreach (NetworkPlayer player in NetworkManager.Instance.Players.Values)
         {
             Node disp = _playerDisplay.Instantiate();
             disp.GetNode<Label>("%Text").Text = player.Username;
