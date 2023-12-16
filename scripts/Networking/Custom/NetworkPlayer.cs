@@ -1,7 +1,15 @@
+using Godot;
+
 namespace KongleJam.Networking.Custom;
 
-public class NetworkPlayer
+public partial class NetworkPlayer : GodotObject 
 {
     public string Username;
-    public int Id;
+    public long Id;
+
+    public NetworkPlayer(long id, string username)
+    {
+        Id = id;
+        Username = username;
+    }
 }

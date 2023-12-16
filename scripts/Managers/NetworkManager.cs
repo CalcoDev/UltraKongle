@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
-using KongleJam.Networking;
 using KongleJam.Networking.Custom;
 
 namespace KongleJam.Managers;
@@ -13,17 +13,50 @@ public partial class NetworkManager : Node
 
     public static NetworkManager Instance { get; private set; }
 
-    public Dictionary<int, NetworkPlayer> Players;
+    public static bool IsServer { get; private set; } = false;
+    public static long Id { get; private set; } = -1;
+    public static int PeerId { get; private set; } = -1;
+    
+    // Store all players
+    public Dictionary<long, NetworkPlayer> Players;
 
-    private Server? _server;
-    private Client? _client;
+    // Called ON CLIENT AND SERVER
+    public Action OnDisconnected;
 
+    // Called ON THE CLIENT when CLIENT connects to SERVER
+    public Action OnClientConnectedToServer;
+
+    // Called ON THE SERVER when SERVER starts
+    public Action OnServerStarted;
+
+    // Called ON THE SERVER when CLIENT connects to SERVER
+    public Action OnServerConnectionsChanged;
+
+    // Called via RPC
+    public Action<NetworkPlayer[]> OnBroadcastPlayers;
+    
+    private ENetMultiplayerPeer _peer;
+
+    private bool _isInit = false;
+
+    // STATIC HELPERS 
+    public static bool IsSelfPid(int pid)
+    {
+        return pid == PeerId;
+    }
+
+    public static bool IsSelfId(long id)
+    {
+        return id == Id;
+    }
+
+    // LIFECYCLE METHODS
     public override void _EnterTree()
     {
         if (Instance == null)
         {
             Instance = this;
-            Players = new Dictionary<int, NetworkPlayer>();
+            Players = new Dictionary<long, NetworkPlayer>();
         }
         else
         {
@@ -32,131 +65,119 @@ public partial class NetworkManager : Node
         }
     }
 
-    public NetworkPlayer GetPlayerData(int id)
+    public override void _Ready()
     {
-        return Players[id];
-    }
+        Multiplayer.PeerConnected += (id) => {
+            GD.Print($"Received connection from Player {id}!");
+            Players.Add(id, new NetworkPlayer(id, $"Player {id}"));
+            OnServerConnectionsChanged?.Invoke();
 
-    public bool IsSelf(int id)
-    {
-        return _client.Id == id;
-    }
-
-
-    private string _cachedIp;
-    private string GetPublicIp()
-    {
-        // TODO(calco): Make this run better.
-        if (_cachedIp == null)
-            _cachedIp = new System.Net.WebClient().DownloadString("https://api.ipify.org");
-        
-        return _cachedIp;
-    }
-
-    public string GetLobbyCopy() {
-        if (_server != null && _server.Active)
-            return GetPublicIp();
-        else if (_client != null && _client.Active)
-            return _client.GetSendEndPoint().Address.ToString();
-        else
-            return "ayo cannot do that";
-    }
-
-    public void StartServer(
-        Action onStartedCallback,
-        Action onClientsChanged
-     ) {
-        // if (_server != null && _server.Active)
-        //     _server.Close();
-        
-        _server = new Server(ServerPort);
-        _server.OnStartedCallback += p => {
-            GD.Print($"Started server on port: {p}!");
-            Players.Clear();
-            onStartedCallback();
-
-            GetTree().CreateTimer(0.5f).Connect(
-                Timer.SignalName.Timeout, 
-                new Callable(Instance, MethodName.StartServerClient)
-            );
-        };
-        _server.OnClientConnectedCallback += (ip, id, type) => {
-            GD.Print($"{ip} connected via {type} and got id {id}!");
-            NetworkPlayer player = new() { 
-                Username = $"Client {id}",
-                Id = id
-            };
+            if (!_isInit)
+                _isInit = true;
             
-            if (!Players.ContainsKey(id))
+            if (IsServer)
             {
-                Players.TryAdd(id, player);
-                
-                GD.Print($"Added id {id}.");
-                onClientsChanged?.Invoke();
+
+                RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id });
+                Rpc(
+                    MethodName.RpcBroadcastPlayers,
+                    new Variant[] { Players.Values.ToArray() }
+                );
             }
         };
-        _server.OnClientDisconnectedCallback += (ip, id, type) => {
-            GD.Print($"{ip} disconnected via {type}!");
-        };
-        _server.OnClosedCallback += () => {
-            GD.Print("Server stopped!");
-        };
+        Multiplayer.PeerDisconnected += (id) => {
+            _isInit = false;
 
-        _server.Start();
-    }
-    
-    private void StartServerClient()
-    {
-        GD.Print("Starting server client...");
-        StartClient("127.0.0.1", null);
-    }
+            if (IsServer)
+            {
+                GD.Print($"Player {id} disconnected!");
+                Players.Remove(id);
+                OnServerConnectionsChanged?.Invoke();
+            }
 
-    public void StartClient(string ip, Action onConnectedCallback)
-    {
-        if (_client != null && _client.Active)
-            _client.Disconnect();
-
-        _client = new Client(0);
-        _client.OnStartedCallback += p => {
-            ClientPort = p;
-            GD.Print($"Client started with port: {p}!");
+            OnDisconnected?.Invoke();
         };
-        _client.OnConnectedCallback += (id, type) => {
-            GD.Print($"Connected via {type} and got id {id}!");
-            onConnectedCallback?.Invoke();
+        Multiplayer.ConnectedToServer += () => {
+            GD.Print("Connected to server!");
+            OnClientConnectedToServer?.Invoke();
         };
-        _client.OnClosedCallback += () => {
-            GD.Print("Closed client!");
+        Multiplayer.ServerDisconnected += () => {
+            GD.Print("Disconnected from server!");
         };
-        _client.OnDisconnectedCallback += (_, type) => {
-            GD.Print($"Disconnected via {type}.");
+        Multiplayer.ConnectionFailed += () => {
+            GD.Print("ERROR: Connection failed!");
         };
-
-        // string ip, int port
-        GD.Print($"Client connecting to ip {ip} and port {ServerPort}!");
-        _client.Connect(ip, ServerPort);
     }
 
-    public void Disconnect(Action onDisconnect)
+    // NERTWORKING LIFECYCLE
+    public void HostServer()
     {
-        if (_client != null)
+        IsServer = true;
+        _peer = new ENetMultiplayerPeer();
+        var error = _peer.CreateServer(ServerPort, 4);
+        if (error != Error.Ok)
         {
-            _client.OnDisconnectedCallback += (_, _) => onDisconnect();
-
-            if (_server == null || _server.Active == false)
-                _client.Disconnect();
+            GD.PrintErr($"ERROR: Could not start server: {error}");
+            return;
         }
+        // TODO(calco): Experiment with this.
+        _peer.Host.Compress(ENetConnection.CompressionMode.RangeCoder);
         
-        if (_server != null)
+        Multiplayer.MultiplayerPeer = _peer;
+        PeerId = Multiplayer.GetUniqueId();
+        GD.Print("Started hosting server! Waiting for connections ...");
+        
+        // TODO(calco): This should not be done here.
+        Players.Add(0, new NetworkPlayer(0, "SERVER"));
+
+        OnServerStarted?.Invoke();
+    }
+
+    public void JoinServer(string ip)
+    {
+        IsServer = false;
+        _peer = new ENetMultiplayerPeer();
+        var error = _peer.CreateClient(ip, ServerPort);
+        if (error != Error.Ok)
         {
-            _server.OnClosedCallback += () => onDisconnect();
-            _server.Close();
+            GD.PrintErr($"ERROR: Could not start client: {error}");
+            return;
         }
+        // TODO(calco): Experiment with this.
+        _peer.Host.Compress(ENetConnection.CompressionMode.RangeCoder);
+
+        Multiplayer.MultiplayerPeer = _peer;
+        PeerId = Multiplayer.GetUniqueId();
+    }
+
+    public void Disconnect()
+    {
+        _peer = null;
+        Multiplayer.MultiplayerPeer = null;
     }
 
     public void KickPlayer(int id)
     {
-        GD.Print($"Trying to kick {id}!");
-        // TODO(calco): Implement this lol.
+        Multiplayer.MultiplayerPeer.DisconnectPeer(id);
+    }
+
+    // RPC METHODS
+    private static string GetRpcFormat()
+    {
+        string type = IsServer ? "Server" : "Client";
+        return $"RPC {Id} ({type}): ";
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority)]
+    private void RpcInitPlayer(long id)
+    {
+        Id = id;
+        GD.Print($"{GetRpcFormat()} Initialized.");
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority)]
+    private void RpcBroadcastPlayers(NetworkPlayer[] players)
+    {
+        OnBroadcastPlayers?.Invoke(players);
     }
 }
