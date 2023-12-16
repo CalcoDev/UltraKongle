@@ -12,8 +12,13 @@ public partial class LobbyUI : Node
     private TextureButton _joinBtn;
     private TextureButton _copyBtn;
     private TextureButton _leaveBtn;
+    private TextureButton _startBtn;
 
     private VBoxContainer _playerList;
+    private TextureRect _playerListContainer;
+
+    private LineEdit _usernameInput;
+    private TextureButton _hidePlayersBtn;
 
     public override void _EnterTree()
     {
@@ -21,6 +26,10 @@ public partial class LobbyUI : Node
         _joinBtn = GetNode<TextureButton>("%JoinClipboard");
         _copyBtn = GetNode<TextureButton>("%CopyCode");
         _leaveBtn = GetNode<TextureButton>("%LeaveLobby");
+        _startBtn = GetNode<TextureButton>("%StartGame");
+        _usernameInput = GetNode<LineEdit>("%UsernameInput");
+        _hidePlayersBtn = GetNode<TextureButton>("%HidePlayers");
+        _playerListContainer = GetNode<TextureRect>("%Players");
 
         _playerList = GetNode<VBoxContainer>("%PlayerList");
 
@@ -40,6 +49,15 @@ public partial class LobbyUI : Node
             TextureButton.SignalName.ButtonDown, 
             new Callable(this, MethodName.HandleLeaveLobby)
         );
+        _startBtn.Connect(
+            TextureButton.SignalName.ButtonDown, 
+            new Callable(this, MethodName.HandleStartGame)
+        );
+
+        _hidePlayersBtn.Connect(
+            TextureButton.SignalName.ButtonDown, 
+            new Callable(this, MethodName.HandleHidePlayers)
+        );
 
         UI_Disconnected();
     }
@@ -56,15 +74,15 @@ public partial class LobbyUI : Node
             UI_ClientConnected();
         };
         NetworkManager.Instance.OnServerConnectionsChanged += () => {
-            UI_RefreshPlayerList();
+            CallDeferred(MethodName.UI_RefreshPlayerList);
         };
     }
 
     // BUTTON HANDLERS
     private void HandleCreateLobby()
     {
-        GD.Print("LOBBY_UI: Trying to start server!");
-        NetworkManager.Instance.HostServer();
+        NetworkManager.Instance.HostServer(_usernameInput.Text);
+        _usernameInput.Text = "";
     }
 
     private void HandleJoinLobby()
@@ -73,26 +91,33 @@ public partial class LobbyUI : Node
         if (clipboard.Length == 0)
             return;
 
-        GD.Print($"LOBBY_UI: Trying to join lobby with IP: {clipboard}");
-        NetworkManager.Instance.JoinServer(clipboard);
+        NetworkManager.Instance.JoinServer(clipboard, _usernameInput.Text);
+        _usernameInput.Text = "";
     }
 
     private void HandleCopyLobby()
     {
-        // DisplayServer.ClipboardSet(NetworkManager.Instance.GetLobbyCopy());
-
-        GD.Print($"{NetworkManager.Id}: players");
-        foreach (NetworkPlayer player in NetworkManager.Instance.Players.Values)
-        {
-            GD.Print($"{player.Id} - {player.Username}");
-        }
-        GD.Print("DONE");
+        DisplayServer.ClipboardSet(NetworkManager.GetLobbyCode());
     }
 
     private void HandleLeaveLobby()
     {
-        GD.Print("LOBBY_UI: Trying to disconnect!");
         NetworkManager.Instance.Disconnect();
+    }
+
+    private void HandleStartGame()
+    {
+        // TODO(calco): START GAME
+    }
+
+    private void HandleHidePlayers()
+    {
+        _playerListContainer.Visible = !_playerListContainer.Visible;
+        
+        if (_playerListContainer.Visible)
+            _hidePlayersBtn.Position = new Vector2(158, 233);
+        else
+            _hidePlayersBtn.Position = new Vector2(8, 233);
     }
 
     // UI STUFF
@@ -102,6 +127,9 @@ public partial class LobbyUI : Node
         _joinBtn.Visible = false;
         _copyBtn.Visible = true;
         _leaveBtn.Visible = true;
+        _usernameInput.Visible = false;
+
+        _startBtn.Visible = true; 
     }
 
     private void UI_ClientConnected()
@@ -110,6 +138,9 @@ public partial class LobbyUI : Node
         _joinBtn.Visible = false;
         _copyBtn.Visible = true;
         _leaveBtn.Visible = true;
+        _usernameInput.Visible = false;
+        
+        _startBtn.Visible = false; 
     }
     
     private void UI_Disconnected()
@@ -118,26 +149,40 @@ public partial class LobbyUI : Node
         _joinBtn.Visible = true;
         _copyBtn.Visible = false;
         _leaveBtn.Visible = false;
+        _usernameInput.Visible = true;
+        
+        _startBtn.Visible = false;
     }
 
     private void UI_RefreshPlayerList()
     {
-        for (int i = _playerList.GetChildCount() - 1; i >= 0; ++i)
+        foreach (Node child in _playerList.GetChildren())
         {
-            Node child = _playerList.GetChild(i);
             _playerList.RemoveChild(child);
-            child.QueueFree();
+            child.Free();
         }
 
         foreach (NetworkPlayer player in NetworkManager.Instance.Players.Values)
         {
             Node disp = _playerDisplay.Instantiate();
-            disp.GetNode<Label>("%Text").Text = player.Username;
+            Label lbl = disp.GetNode<Label>("%Text");
+            if (NetworkManager.IsSelfId(player.Id))
+                lbl.Text += "S";
+            if (NetworkManager.ServerPeerId == player.Id)
+                lbl.Text += "H";
+            if (lbl.Text.Length != 0)
+                lbl.Text += "-";
+            lbl.Text = player.Username;
+
             if (NetworkManager.IsServer && !NetworkManager.IsSelfId(player.Id))
             {
                 disp.GetNode<TextureButton>("%Texture").ButtonDown += () => {
-                    NetworkManager.Instance.KickPlayer(NetworkManager.PeerId);
+                    NetworkManager.Instance.KickPlayer(player.Id);
                 };
+            }
+            else
+            {
+                disp.GetNode<TextureButton>("%Texture").Visible = false;
             }
 
             _playerList.AddChild(disp);

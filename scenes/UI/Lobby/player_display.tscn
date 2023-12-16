@@ -1,19 +1,24 @@
-[gd_scene load_steps=3 format=3 uid="uid://dnics2hhwrmm8"]
+[gd_scene load_steps=3 format=3 uid="uid://b2n07bltbwqsi"]
 
 [ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="1_gemr1"]
 [ext_resource type="Texture2D" uid="uid://ce3hc2srfal4e" path="res://assets/art/ui/ui_player_kick.png" id="2_adh0c"]
 
 [node name="Player" type="HBoxContainer"]
+clip_contents = true
+size_flags_vertical = 4
+theme_override_constants/separation = 0
 
 [node name="Text" type="Label" parent="."]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(95, 0)
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 theme_override_fonts/font = ExtResource("1_gemr1")
-text = "Player #1"
+text = "SH - Calcopodoo"
+clip_text = true
 
 [node name="Texture" type="TextureButton" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 10
 texture_normal = ExtResource("2_adh0c")

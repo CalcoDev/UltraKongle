@@ -52,10 +52,10 @@ public partial class Player : Node2D
 
     public override void _Process(double delta)
     {
-        if (Input.IsActionJustPressed("hop"))
-        {
-            Game.PlayDialogue(DIALOGUE);
-        }
+        // if (Input.IsActionJustPressed("hop"))
+        // {
+        //     Game.PlayDialogue(DIALOGUE);
+        // }
 
         // Input
         _iYeet.Update("yeet");

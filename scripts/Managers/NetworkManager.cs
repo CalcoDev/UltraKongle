@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Godot;
 using KongleJam.Networking.Custom;
 
@@ -15,6 +16,7 @@ public partial class NetworkManager : Node
 
     public static bool IsServer { get; private set; } = false;
     public static long Id { get; private set; } = -1;
+    public static string Username { get; private set; } = "DEFAULT";
     public static int PeerId { get; private set; } = -1;
     public static long ServerPeerId { get; private set; } = -1;
     
@@ -48,6 +50,13 @@ public partial class NetworkManager : Node
         return id == Id;
     }
 
+    public static string GetLobbyCode()
+    {
+        string hostname = Dns.GetHostName();
+        string ip = Dns.GetHostEntry(hostname).AddressList[0].ToString();
+        return ip;
+    }
+
     // LIFECYCLE METHODS
     public override void _EnterTree()
     {
@@ -72,22 +81,25 @@ public partial class NetworkManager : Node
                 
                 string usrnam = $"Player {id}"; // short name to fit lol
                 Players.Add(id, new NetworkPlayer(id, usrnam));
-                OnServerConnectionsChanged?.Invoke();
 
                 RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id, Id });
                 
                 // Tell everyone about new guy
                 Rpc(MethodName.RpcSendPlayerInfo, new Variant[] { id, usrnam });
-
-                // Tell new guy about everyone
+               
+               // Tell new guy about everyone
                 foreach (NetworkPlayer player in Players.Values)
                 {
+                    if (player.Id == id)
+                        continue;
+
                     RpcId(
                         id, MethodName.RpcSendPlayerInfo,
-                        new Variant[] { player.Id, player.Username }
+                        new Variant[] { player.Id, player.Username } 
                     );
                 }
             }
+            OnServerConnectionsChanged?.Invoke();
             
             // TODO(calco): Figure out where to put this
             if (!_isInit)
@@ -100,18 +112,26 @@ public partial class NetworkManager : Node
                 GD.Print($"Player {id} disconnected!");
                 
                 Players.Remove(id);
-                OnServerConnectionsChanged?.Invoke();
                 
                 // Tell everyone about old guy
                 Rpc(MethodName.RpcKickPlayer, new Variant[] { id });
             }
+
+            if (id == ServerPeerId)
+                Players.Clear();
+
+            OnServerConnectionsChanged?.Invoke();
         };
         Multiplayer.ConnectedToServer += () => {
-            GD.Print("Connected to server!");
+            GD.Print($"Connected to server!");
+
+            OnServerConnectionsChanged?.Invoke();
             OnClientConnectedToServer?.Invoke();
         };
         Multiplayer.ServerDisconnected += () => {
             GD.Print("Disconnected from server!");
+            
+            OnServerConnectionsChanged?.Invoke();
             OnDisconnected?.Invoke();
         };
         Multiplayer.ConnectionFailed += () => {
@@ -120,7 +140,7 @@ public partial class NetworkManager : Node
     }
 
     // NERTWORKING LIFECYCLE
-    public void HostServer()
+    public void HostServer(string username)
     {
         IsServer = true;
         _isInit = false;
@@ -134,7 +154,6 @@ public partial class NetworkManager : Node
             GD.PrintErr($"ERROR: Could not start server: {error}");
             return;
         }
-        // TODO(calco): Experiment with this.
         _peer.Host.Compress(ENetConnection.CompressionMode.RangeCoder);
         
         Multiplayer.MultiplayerPeer = _peer;
@@ -144,14 +163,17 @@ public partial class NetworkManager : Node
         // TODO(calco): This should not be done here.
         Id = PeerId;
         ServerPeerId = PeerId;
-        Players.Add(Id, new NetworkPlayer(Id, "SERVER"));
+        Username = username.Length == 0 ? "SERVER" : username;
+        Players.Add(Id, new NetworkPlayer(Id, Username));
         OnServerConnectionsChanged?.Invoke();
 
         OnServerStarted?.Invoke();
     }
 
-    public void JoinServer(string ip)
+    public void JoinServer(string ip, string username)
     {
+        Username = username;
+       
         IsServer = false;
         _isInit = false;
 
@@ -164,7 +186,6 @@ public partial class NetworkManager : Node
             GD.PrintErr($"ERROR: Could not start client: {error}");
             return;
         }
-        // TODO(calco): Experiment with this.
         _peer.Host.Compress(ENetConnection.CompressionMode.RangeCoder);
 
         Multiplayer.MultiplayerPeer = _peer;
@@ -173,6 +194,8 @@ public partial class NetworkManager : Node
 
     public void Disconnect()
     {
+        Players.Clear();
+        
         if (IsServer)
         {
             GD.Print($"{GetRpcFormat()} Stopping server ...");
@@ -186,9 +209,14 @@ public partial class NetworkManager : Node
             
             GD.Print($"{GetRpcFormat()} Stopped server!");
             OnDisconnected?.Invoke();
-            
-            _peer = null;
-            Multiplayer.MultiplayerPeer = null;
+            OnServerConnectionsChanged?.Invoke();
+
+            // TODO(calco): Properly delete and close the port after use.
+            GetTree().CreateTimer(0.1f).Timeout += () => {
+                Multiplayer.MultiplayerPeer.Close();
+                _peer = null;
+                Multiplayer.MultiplayerPeer = null;
+            };
         }
         else
         {
@@ -197,13 +225,19 @@ public partial class NetworkManager : Node
         }
     }
 
-    public void KickPlayer(int id)
+    public void KickPlayer(long id)
     {
-        Multiplayer.MultiplayerPeer.DisconnectPeer(id);
+        if (!IsServer)
+            return;
+
+        // RpcId(ServerPeerId, MethodName.RpcDisconnectPlayer, new Variant[] { id });
+        RpcDisconnectPlayer(id);
     }
 
+    // RPC METHOD HALPERS
+
     // RPC METHODS
-    private static string GetRpcFormat()
+    public static string GetRpcFormat()
     {
         string type = IsServer ? "Server" : "Client";
         return $"RPC {Id} ({type}): ";
@@ -214,10 +248,13 @@ public partial class NetworkManager : Node
     {
         Id = id;
         ServerPeerId = serverId;
+            
+        Rpc(MethodName.RpcSendPlayerInfo, new Variant[] {Id, Username});
+        
         GD.Print($"{GetRpcFormat()} Initialized.");
     }
 
-    [Rpc(MultiplayerApi.RpcMode.Authority)]
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
     private void RpcSendPlayerInfo(long id, string username)
     {
         if (!Players.ContainsKey(id))
@@ -227,8 +264,22 @@ public partial class NetworkManager : Node
         }
         else
         {
-            GD.Print($"{GetRpcFormat()} Tried adding player {id} {username} to list, but was already present!");
+            Players[id] = new NetworkPlayer(id, username);
+            // GD.Print($"{GetRpcFormat()} Tried adding player {id} {username} to list, but was already present!");
         }
+
+        if (IsServer)
+        {
+            foreach (NetworkPlayer player in Players.Values)
+            {
+                if (IsSelfId(player.Id))
+                    continue;
+                
+                RpcId(player.Id, MethodName.RpcSendPlayerInfo, new Variant[] { id, username });
+            }
+        }
+
+        OnServerConnectionsChanged?.Invoke();
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority)]

@@ -13,7 +13,7 @@
 [ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="11_em2ex"]
 [ext_resource type="Script" path="res://scripts/UI/LobbyUI.cs" id="12_71hrq"]
 [ext_resource type="Texture2D" uid="uid://br63irgc5fws7" path="res://assets/art/ui/ui_lobby_background.png" id="12_g85pa"]
-[ext_resource type="PackedScene" uid="uid://dnics2hhwrmm8" path="res://scenes/UI/Lobby/player_display.tscn" id="13_ejh64"]
+[ext_resource type="PackedScene" uid="uid://b2n07bltbwqsi" path="res://scenes/UI/Lobby/player_display.tscn" id="13_ejh64"]
 [ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="14_1rptu"]
 [ext_resource type="Texture2D" uid="uid://5k2nw6lccyup" path="res://assets/art/ui/ui_lobby_menu_btn.png" id="15_afd7b"]
 [ext_resource type="Texture2D" uid="uid://dux8uuod6e46h" path="res://assets/art/ui/ui_lobby_players.png" id="16_ldd4d"]
@@ -254,11 +254,13 @@ theme_override_fonts/font = ExtResource("14_1rptu")
 text = "Leave Lobby"
 
 [node name="Players" type="TextureRect" parent="UI"]
+unique_name_in_owner = true
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 151.0
 offset_bottom = 262.0
 texture = ExtResource("16_ldd4d")
+metadata/_edit_lock_ = true
 
 [node name="MarginContainer" type="MarginContainer" parent="UI/Players"]
 layout_mode = 1
@@ -294,11 +296,45 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="HidePlayers" type="TextureButton" parent="UI"]
+unique_name_in_owner = true
 offset_left = 159.0
 offset_top = 233.0
 offset_right = 187.0
 offset_bottom = 262.0
 texture_normal = ExtResource("17_kvodo")
+
+[node name="UsernameInput" type="LineEdit" parent="UI"]
+unique_name_in_owner = true
+offset_left = 333.0
+offset_top = 174.0
+offset_right = 471.0
+offset_bottom = 210.0
+theme_override_fonts/font = ExtResource("14_1rptu")
+placeholder_text = "username"
+
+[node name="StartGame" type="TextureButton" parent="UI"]
+unique_name_in_owner = true
+offset_left = 335.0
+offset_top = 238.0
+offset_right = 466.0
+offset_bottom = 262.0
+texture_normal = ExtResource("15_afd7b")
+
+[node name="Label" type="Label" parent="UI/StartGame"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -41.0
+offset_top = -7.0
+offset_right = 41.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_1rptu")
+text = "Start Game"
 
 [node name="NetworkManager" type="Node" parent="."]
 script = ExtResource("16_us05y")
