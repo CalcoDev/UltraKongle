@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://cyaj73bw5usvj"]
+[gd_scene load_steps=25 format=3 uid="uid://cyaj73bw5usvj"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_lb3jw"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="2_m1v12"]
@@ -10,14 +10,12 @@
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="8_levuy"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="9_lplr6"]
 [ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="10_okkyq"]
-[ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="11_em2ex"]
 [ext_resource type="Script" path="res://scripts/UI/LobbyUI.cs" id="12_71hrq"]
 [ext_resource type="Texture2D" uid="uid://br63irgc5fws7" path="res://assets/art/ui/ui_lobby_background.png" id="12_g85pa"]
 [ext_resource type="PackedScene" uid="uid://b2n07bltbwqsi" path="res://scenes/UI/Lobby/player_display.tscn" id="13_ejh64"]
 [ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="14_1rptu"]
 [ext_resource type="Texture2D" uid="uid://5k2nw6lccyup" path="res://assets/art/ui/ui_lobby_menu_btn.png" id="15_afd7b"]
 [ext_resource type="Texture2D" uid="uid://dux8uuod6e46h" path="res://assets/art/ui/ui_lobby_players.png" id="16_ldd4d"]
-[ext_resource type="Script" path="res://scripts/Managers/NetworkManager.cs" id="16_us05y"]
 [ext_resource type="Texture2D" uid="uid://bqrw8pcqgbmg5" path="res://assets/art/ui/ui_players_arrow.png" id="17_kvodo"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_dknk5"]
@@ -124,12 +122,6 @@ continuous_cd = 1
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
 position = Vector2(1, -1)
 shape = SubResource("CircleShape2D_gn0bn")
-
-[node name="GameManager" type="Node" parent="."]
-script = ExtResource("11_em2ex")
-
-[node name="NetworkManager" type="Node" parent="."]
-script = ExtResource("16_us05y")
 
 [node name="UI" type="CanvasLayer" parent="."]
 script = ExtResource("12_71hrq")

@@ -108,7 +108,7 @@ public partial class LobbyUI : Node
 
     private void HandleStartGame()
     {
-        // TODO(calco): START GAME
+        NetworkManager.Instance.GoToCharacterSelect();
     }
 
     private void HandleHidePlayers()
@@ -167,13 +167,15 @@ public partial class LobbyUI : Node
         {
             Node disp = _playerDisplay.Instantiate();
             Label lbl = disp.GetNode<Label>("%Text");
+            
+            lbl.Text = "";
             if (NetworkManager.IsSelfId(player.Id))
                 lbl.Text += "S";
             if (NetworkManager.ServerPeerId == player.Id)
                 lbl.Text += "H";
             if (lbl.Text.Length != 0)
                 lbl.Text += "-";
-            lbl.Text = player.Username;
+            lbl.Text += player.Username;
 
             if (NetworkManager.IsServer && !NetworkManager.IsSelfId(player.Id))
             {

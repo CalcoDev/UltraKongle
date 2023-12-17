@@ -15,6 +15,11 @@ run/main_scene="res://scenes/Lobby.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
 run/max_fps=240
 
+[autoload]
+
+GameManager="*res://scenes/Managers/game_manager.tscn"
+NetworkManager="*res://scenes/Managers/network_manager.tscn"
+
 [display]
 
 window/size/viewport_width=480

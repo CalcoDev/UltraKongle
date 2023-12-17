@@ -11,12 +11,12 @@
 [ext_resource type="Resource" uid="uid://by7emb0qbyw3x" path="res://resources/characters/char_laitier.tres" id="6_qu44x"]
 [ext_resource type="Texture2D" uid="uid://b51qfeai3snj4" path="res://assets/art/ui/ui_character_select_select_pane.png" id="9_fb42j"]
 [ext_resource type="PackedScene" uid="uid://4nrpavgj7k7s" path="res://scenes/UI/CharacterSelect/character_select.tscn" id="10_ga47a"]
-[ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="11_btbra"]
 [ext_resource type="Texture2D" uid="uid://cjdeu7avkqasc" path="res://assets/art/ui/ui_character_select_char_textbox.png" id="11_fqlsw"]
-[ext_resource type="Script" path="res://scripts/Managers/NetworkManager.cs" id="12_r4bc6"]
 [ext_resource type="FontFile" uid="uid://ijf5yh1ex6hs" path="res://assets/fonts/m5x7.ttf" id="13_j81x4"]
 [ext_resource type="Texture2D" uid="uid://ch6jtu8mb5vdo" path="res://assets/art/ui/ui_character_select_play_btn.png" id="14_wuchb"]
+[ext_resource type="Texture2D" uid="uid://cjtod8wtq4vqr" path="res://assets/art/ui/ui_character_select_play_btn_disabled.png" id="16_ajmsh"]
 [ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="16_xtu30"]
+[ext_resource type="PackedScene" uid="uid://bhxpddb0ylvag" path="res://scenes/UI/CharacterSelect/character_preview.tscn" id="17_k74m5"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ihrlw"]
 shader = ExtResource("2_2m70b")
@@ -32,6 +32,9 @@ _defaultTexture = ExtResource("2_q808a")
 _hoveredTexture = ExtResource("3_psbxg")
 _selectedTexture = ExtResource("4_ek2o5")
 _characters = Array[Object]([ExtResource("5_ed5gn"), ExtResource("6_qu44x")])
+
+[node name="CountdownTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="Camera" type="Camera2D" parent="."]
 unique_name_in_owner = true
@@ -54,12 +57,6 @@ material = SubResource("ShaderMaterial_ihrlw")
 offset_right = 40.0
 offset_bottom = 40.0
 texture = ExtResource("3_5enax")
-
-[node name="GameManager" type="Node" parent="."]
-script = ExtResource("11_btbra")
-
-[node name="NetworkManager" type="Node" parent="."]
-script = ExtResource("12_r4bc6")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -220,15 +217,70 @@ offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
 texture_normal = ExtResource("14_wuchb")
+texture_disabled = ExtResource("16_ajmsh")
 
 [node name="Label" type="Label" parent="UI/PlayButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 1.0
+offset_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("16_xtu30")
-text = "PLAY"
+text = "READY"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="CountdownLabel" type="Label" parent="UI/PlayButton"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -28.0
+offset_right = 20.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("16_xtu30")
+text = "60"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CharacterDisplays" type="Control" parent="UI"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="1" parent="UI/CharacterDisplays" instance=ExtResource("17_k74m5")]
+
+[node name="2" parent="UI/CharacterDisplays" instance=ExtResource("17_k74m5")]
+offset_left = 39.0
+offset_top = 48.0
+offset_right = 39.0
+offset_bottom = 48.0
+
+[node name="3" parent="UI/CharacterDisplays" instance=ExtResource("17_k74m5")]
+offset_left = 118.0
+offset_top = -36.0
+offset_right = 118.0
+offset_bottom = -36.0
+
+[node name="4" parent="UI/CharacterDisplays" instance=ExtResource("17_k74m5")]
+offset_left = -51.0
+offset_top = -99.0
+offset_right = -51.0
+offset_bottom = -99.0

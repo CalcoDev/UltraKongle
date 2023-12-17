@@ -2,6 +2,7 @@ using System.Linq;
 using Godot;
 using Godot.Collections;
 using KongleJam.GameObjects;
+using KongleJam.Managers;
 using KongleJam.Resources;
 
 namespace KongleJam.Ui;
@@ -29,7 +30,12 @@ public partial class CharacterSelectUI : Node2D
 	private TextureRect _selectedRect;
 	private int _selectedId;
 
-	private TextureButton _playBtn;
+	private TextureButton _readyBtn;
+
+	private Timer _countdownTimer;
+	private Label _countdownLabel;
+
+	private Control _characterDisplays;
 
     public override void _Ready()
     {
@@ -52,12 +58,16 @@ public partial class CharacterSelectUI : Node2D
 			TextureRect texture = select.GetNode<TextureRect>("%Texture");
 			texture.Texture = _characters[idx].Texture;
 			select.MouseEntered += () => {
-				select.Texture = _hoveredTexture;
+				if (_selectedRect != select)
+					select.Texture = _hoveredTexture;
+				
 				_currentRect = select;
 				_currentId = int.Parse(select.Name.ToString()[4..]) - 1;
 			};
 			select.MouseExited += () => {
-				select.Texture = _defaultTexture;
+				if (_selectedRect != select)
+					select.Texture = _defaultTexture;
+				
 				_currentRect = null;
 				_currentId = -1;
 			};
@@ -65,15 +75,37 @@ public partial class CharacterSelectUI : Node2D
 			idx += 1;
 		}
 
-		_playBtn = GetNode<TextureButton>("%PlayButton");
-		_playBtn.Connect(
+		_readyBtn = GetNode<TextureButton>("%PlayButton");
+		_readyBtn.Connect(
 			TextureButton.SignalName.ButtonDown,
-			new Callable(this, MethodName.HandlePlay)	
+			new Callable(this, MethodName.HandleReady)	
 		);
 
 		_characterName = GetNode<Label>("%CharacterName");
 		_characterDescription = GetNode<Label>("%CharacterDescription");
-    }
+
+		_countdownTimer = GetNode<Timer>("CountdownTimer");
+		NetworkManager.Instance.OnSetCountdown += (seconds) => {
+			_countdownLabel.Visible = true;
+			if (_countdownTimer.TimeLeft == 0 && _countdownTimer.TimeLeft <= seconds)
+				_countdownTimer.Start(seconds);
+		};
+
+		_countdownLabel = GetNode<Label>("%CountdownLabel");
+		_countdownLabel.Visible = false;
+		
+		_characterDisplays = GetNode<Control>("%CharacterDisplays");
+		NetworkManager.Instance.OnPlayerSelectCharacter += (id) => {
+			int idx = NetworkManager.Instance.Players[id].Index;
+			int charIdx = NetworkManager.Instance.Players[id].CharacterId;
+			Character character = _characters[charIdx];
+			GD.Print($"GOT CHARACTER INDEX {charIdx} FOR ID {id}");
+			_characterDisplays
+				.GetChild(idx)
+				.GetNode<TextureRect>("Texture")
+				.Texture = character.Texture;
+		};
+	}
 
     public override void _Process(double delta)
     {
@@ -86,17 +118,21 @@ public partial class CharacterSelectUI : Node2D
 			_currentRect.Texture = _selectedTexture;
 			_selectedId = _currentId;
 			_selectedRect = _currentRect;
+			NetworkManager.Instance.UpdatePlayerCharacter(_selectedId);
 			UI_SelectCharacter();
 		}
 
+		_countdownLabel.Text = $"{(int)_countdownTimer.TimeLeft + 1}";
 		Vector2 mouseOffset =
 			GetLocalMousePosition() / GetViewportRect().Size * 2f - Vector2.One;
 		
 		_backgroundMat.SetShaderParameter("offset", mouseOffset);
     }
 
-	private void HandlePlay()
+	private void HandleReady()
 	{
+		_readyBtn.Disabled = true;
+		NetworkManager.Instance.AnnounceReady();
 	}
 				
 	private void UI_SelectCharacter()

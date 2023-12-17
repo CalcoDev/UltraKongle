@@ -1,19 +1,19 @@
-[gd_scene load_steps=26 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=26 format=3 uid="uid://d0bj623h2qh0t"]
 
-[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
-[ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
-[ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="2_b3ppq"]
-[ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="2_gp38v"]
-[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_1lb1s"]
-[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="4_5ecr1"]
-[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="4_447wg"]
-[ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="4_vjpmf"]
-[ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="5_kksbf"]
-[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_ltxpe"]
-[ext_resource type="Texture2D" uid="uid://ctlglvjbnh8r7" path="res://assets/art/ui/ui_dialogue_sprite.png" id="8_jbyhr"]
-[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="9_jtcfg"]
-[ext_resource type="Texture2D" uid="uid://cnelj20iekfyf" path="res://assets/art/ui/speakers/ui_speaker_kongle.png" id="10_axmtb"]
-[ext_resource type="Script" path="res://scripts/Managers/DialogueManager.cs" id="11_rxy5x"]
+[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_m8snn"]
+[ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="2_oyjox"]
+[ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="3_fa4rm"]
+[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="4_o53y2"]
+[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_gk4dk"]
+[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="6_esqdb"]
+[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="7_gtaia"]
+[ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="8_5ov6o"]
+[ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="9_q4jor"]
+[ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="10_iixl2"]
+[ext_resource type="Script" path="res://scripts/Managers/DialogueManager.cs" id="11_d468x"]
+[ext_resource type="Texture2D" uid="uid://ctlglvjbnh8r7" path="res://assets/art/ui/ui_dialogue_sprite.png" id="12_72apf"]
+[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="13_og158"]
+[ext_resource type="Texture2D" uid="uid://cnelj20iekfyf" path="res://assets/art/ui/speakers/ui_speaker_kongle.png" id="14_yn125"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_dknk5"]
 noise_type = 2
@@ -29,23 +29,23 @@ seamless = true
 noise = SubResource("FastNoiseLite_dknk5")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wff7o"]
-shader = ExtResource("1_ysx5e")
+shader = ExtResource("2_oyjox")
 shader_parameter/u_center = Vector2(0, 0)
 shader_parameter/u_offset = 0.435
 shader_parameter/u_inner_radius = 0.045
 shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
 
 [sub_resource type="Resource" id="Resource_2hky5"]
-script = ExtResource("5_ltxpe")
-Speaker = ExtResource("4_447wg")
+script = ExtResource("5_gk4dk")
+Speaker = ExtResource("4_o53y2")
 Message = "I am thje milkmam.
 Milk is delicious."
 AutoPlay = false
 PlaybackSpeedMult = 1.0
 
 [sub_resource type="Resource" id="Resource_tjigg"]
-script = ExtResource("5_ltxpe")
-Speaker = ExtResource("4_1lb1s")
+script = ExtResource("5_gk4dk")
+Speaker = ExtResource("6_esqdb")
 Message = "Yo yo yo.
 I am Kongle."
 AutoPlay = false
@@ -117,7 +117,7 @@ _data = {
 
 [node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
 position = Vector2(240, 135)
-script = ExtResource("1_22qnp")
+script = ExtResource("1_m8snn")
 Follow = NodePath("../Player")
 Static = true
 
@@ -135,11 +135,11 @@ grow_vertical = 2
 
 [node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
 position = Vector2(108, 53)
-script = ExtResource("2_b3ppq")
+script = ExtResource("3_fa4rm")
 DIALOGUE = SubResource("Resource_tjigg")
 _rb = NodePath("RigidBody2D")
 
-[node name="InterpolationComponent" parent="Player" instance=ExtResource("4_5ecr1")]
+[node name="InterpolationComponent" parent="Player" instance=ExtResource("7_gtaia")]
 
 [node name="Interpolated" type="Node2D" parent="Player"]
 
@@ -147,21 +147,21 @@ _rb = NodePath("RigidBody2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player/Visuals"]
 position = Vector2(-4, -7)
-texture = ExtResource("2_gp38v")
+texture = ExtResource("8_5ov6o")
 centered = false
 
 [node name="Blob" type="Node2D" parent="Player"]
 
 [node name="Sprite2D" type="Sprite2D" parent="Player/Blob"]
 position = Vector2(-2, 8)
-texture = ExtResource("4_vjpmf")
+texture = ExtResource("9_q4jor")
 centered = false
 
 [node name="Arrow" type="Node2D" parent="Player"]
 
 [node name="Sprite2D" type="Sprite2D" parent="Player/Arrow"]
 position = Vector2(-4, -13)
-texture = ExtResource("5_kksbf")
+texture = ExtResource("10_iixl2")
 centered = false
 
 [node name="RigidBody2D" type="RigidBody2D" parent="Player"]
@@ -175,7 +175,7 @@ position = Vector2(1, -1)
 shape = SubResource("CircleShape2D_gn0bn")
 
 [node name="DialogueManager" type="Node" parent="." node_paths=PackedStringArray("_anim", "_dialogueControl", "_speakerSprite", "_text")]
-script = ExtResource("11_rxy5x")
+script = ExtResource("11_d468x")
 _anim = NodePath("UI/AnimationPlayer")
 _dialogueControl = NodePath("UI/DialogueBackground")
 _speakerSprite = NodePath("UI/DialogueBackground/TextureRect")
@@ -203,7 +203,7 @@ grow_horizontal = 2
 grow_vertical = 0
 pivot_offset = Vector2(134, 39)
 size_flags_horizontal = 4
-texture = ExtResource("8_jbyhr")
+texture = ExtResource("12_72apf")
 
 [node name="MarginContainer" type="MarginContainer" parent="DialogueManager/UI/DialogueBackground"]
 clip_contents = true
@@ -221,7 +221,7 @@ theme_override_constants/margin_bottom = 16
 [node name="Label" type="Label" parent="DialogueManager/UI/DialogueBackground/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 1
-theme_override_fonts/font = ExtResource("9_jtcfg")
+theme_override_fonts/font = ExtResource("13_og158")
 theme_override_font_sizes/font_size = 16
 text = "uwu I am kowongle"
 
@@ -231,4 +231,4 @@ offset_left = 16.0
 offset_top = -46.0
 offset_right = 64.0
 offset_bottom = 2.0
-texture = ExtResource("10_axmtb")
+texture = ExtResource("14_yn125")
