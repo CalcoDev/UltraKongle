@@ -134,6 +134,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
+visible = false
 position = Vector2(108, 53)
 script = ExtResource("3_fa4rm")
 DIALOGUE = SubResource("Resource_tjigg")
@@ -185,6 +186,7 @@ _text = NodePath("UI/DialogueBackground/MarginContainer/Label")
 BaseSpeed = 10.0
 
 [node name="UI" type="CanvasLayer" parent="DialogueManager"]
+visible = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="DialogueManager/UI"]
 libraries = {

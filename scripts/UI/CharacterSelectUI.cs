@@ -93,7 +93,7 @@ public partial class CharacterSelectUI : Node2D
 			_readyCountLabel.Visible = true;
 			_readiedPlayers += 1;
 			_readyCountLabel.Text = $"{_readiedPlayers}/{NetworkManager.Instance.Players.Count}";
-			if (_countdownTimer.TimeLeft == 0 || _countdownTimer.TimeLeft <= seconds)
+			if (_countdownTimer.TimeLeft == 0 || _countdownTimer.TimeLeft > seconds)
 				_countdownTimer.Start(seconds);
 		};
 
