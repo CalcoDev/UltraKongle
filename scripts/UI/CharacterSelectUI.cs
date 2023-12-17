@@ -34,8 +34,11 @@ public partial class CharacterSelectUI : Node2D
 
 	private Timer _countdownTimer;
 	private Label _countdownLabel;
+	private Label _readyCountLabel;
 
 	private Control _characterDisplays;
+
+	private int _readiedPlayers = 0;
 
     public override void _Ready()
     {
@@ -87,24 +90,38 @@ public partial class CharacterSelectUI : Node2D
 		_countdownTimer = GetNode<Timer>("CountdownTimer");
 		NetworkManager.Instance.OnSetCountdown += (seconds) => {
 			_countdownLabel.Visible = true;
+			_readyCountLabel.Visible = true;
+			_readiedPlayers += 1;
+			_readyCountLabel.Text = $"{_readiedPlayers}/{NetworkManager.Instance.Players.Count}";
 			if (_countdownTimer.TimeLeft == 0 && _countdownTimer.TimeLeft <= seconds)
 				_countdownTimer.Start(seconds);
 		};
 
 		_countdownLabel = GetNode<Label>("%CountdownLabel");
 		_countdownLabel.Visible = false;
+		_readyCountLabel = GetNode<Label>("%ReadyCountLabel");
+		_readyCountLabel.Visible = false;
 		
 		_characterDisplays = GetNode<Control>("%CharacterDisplays");
-		NetworkManager.Instance.OnPlayerSelectCharacter += (id) => {
-			int idx = NetworkManager.Instance.Players[id].Index;
-			int charIdx = NetworkManager.Instance.Players[id].CharacterId;
-			Character character = _characters[charIdx];
-			GD.Print($"GOT CHARACTER INDEX {charIdx} FOR ID {id}");
-			_characterDisplays
-				.GetChild(idx)
-				.GetNode<TextureRect>("Texture")
-				.Texture = character.Texture;
-		};
+		NetworkManager.Instance.OnPlayerSelectCharacter += HandlePlayerSelectCharacter;
+	}
+
+    public override void _ExitTree()
+    {
+		NetworkManager.Instance.OnPlayerSelectCharacter -= HandlePlayerSelectCharacter;
+	}
+
+    // NETWORK MANAGER HANDLERS
+    private void HandlePlayerSelectCharacter(long id)
+	{
+		int idx = NetworkManager.Instance.Players[id].Index;
+		int charIdx = NetworkManager.Instance.Players[id].CharacterId;
+		Character character = _characters[charIdx];
+		TextureRect tr = _characterDisplays
+			.GetChild(idx)
+			.GetNode<TextureRect>("Texture");
+		tr.Texture = character.Texture;
+		tr.SetAnchorsPreset(Control.LayoutPreset.Center);
 	}
 
     public override void _Process(double delta)

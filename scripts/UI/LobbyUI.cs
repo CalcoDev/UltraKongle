@@ -65,18 +65,39 @@ public partial class LobbyUI : Node
 
     public override void _Ready()
     {
-        NetworkManager.Instance.OnServerStarted += () => {
-            UI_ServerStarted();
-        };
-        NetworkManager.Instance.OnDisconnected += () => {
-            UI_Disconnected();
-        };
-        NetworkManager.Instance.OnClientConnectedToServer += () => {
-            UI_ClientConnected();
-        };
-        NetworkManager.Instance.OnServerConnectionsChanged += () => {
-            CallDeferred(MethodName.UI_RefreshPlayerList);
-        };
+        NetworkManager.Instance.OnServerStarted += HandleServerStarted;
+        NetworkManager.Instance.OnDisconnected += HandleDisconnected;
+        NetworkManager.Instance.OnClientConnectedToServer += HandleClientConnected;
+        NetworkManager.Instance.OnServerConnectionsChanged += HandleServerConnectionsChanged;
+    }
+
+    public override void _ExitTree()
+    {
+        NetworkManager.Instance.OnServerStarted -= HandleServerStarted;
+        NetworkManager.Instance.OnDisconnected -= HandleDisconnected;
+        NetworkManager.Instance.OnClientConnectedToServer -= HandleClientConnected;
+        NetworkManager.Instance.OnServerConnectionsChanged -= HandleServerConnectionsChanged;   
+    }
+
+    // NETWORK MANAGER HANDLERS
+    private void HandleServerStarted()
+    {
+        UI_ServerStarted();
+    }
+
+    private void HandleDisconnected()
+    {
+        UI_Disconnected();
+    }
+
+    private void HandleClientConnected()
+    {
+        UI_ClientConnected();
+    }
+
+    private void HandleServerConnectionsChanged()
+    {
+        CallDeferred(MethodName.UI_RefreshPlayerList);
     }
 
     // BUTTON HANDLERS
