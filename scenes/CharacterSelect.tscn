@@ -1,0 +1,234 @@
+[gd_scene load_steps=19 format=3 uid="uid://dif0nr74x4tb2"]
+
+[ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_2vxs5"]
+[ext_resource type="Script" path="res://scripts/UI/CharacterSelectUI.cs" id="1_x5fwu"]
+[ext_resource type="Shader" path="res://resources/shaders/space_distortion.gdshader" id="2_2m70b"]
+[ext_resource type="Texture2D" uid="uid://dttrupy4jyajy" path="res://assets/art/ui/ui_character_select_char.png" id="2_q808a"]
+[ext_resource type="Texture2D" uid="uid://q65uc6ju6q4j" path="res://assets/art/ui/ui_character_select_background.png" id="3_5enax"]
+[ext_resource type="Texture2D" uid="uid://dwh05wv1bx8qi" path="res://assets/art/ui/ui_character_select_char_hovered.png" id="3_psbxg"]
+[ext_resource type="Texture2D" uid="uid://7c5jel51mglf" path="res://assets/art/ui/ui_character_select_char_selected.png" id="4_ek2o5"]
+[ext_resource type="Resource" uid="uid://c6icjgnd3vldw" path="res://resources/characters/char_kongle.tres" id="5_ed5gn"]
+[ext_resource type="Resource" uid="uid://by7emb0qbyw3x" path="res://resources/characters/char_laitier.tres" id="6_qu44x"]
+[ext_resource type="Texture2D" uid="uid://b51qfeai3snj4" path="res://assets/art/ui/ui_character_select_select_pane.png" id="9_fb42j"]
+[ext_resource type="PackedScene" uid="uid://4nrpavgj7k7s" path="res://scenes/UI/CharacterSelect/character_select.tscn" id="10_ga47a"]
+[ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="11_btbra"]
+[ext_resource type="Texture2D" uid="uid://cjdeu7avkqasc" path="res://assets/art/ui/ui_character_select_char_textbox.png" id="11_fqlsw"]
+[ext_resource type="Script" path="res://scripts/Managers/NetworkManager.cs" id="12_r4bc6"]
+[ext_resource type="FontFile" uid="uid://ijf5yh1ex6hs" path="res://assets/fonts/m5x7.ttf" id="13_j81x4"]
+[ext_resource type="Texture2D" uid="uid://ch6jtu8mb5vdo" path="res://assets/art/ui/ui_character_select_play_btn.png" id="14_wuchb"]
+[ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="16_xtu30"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ihrlw"]
+shader = ExtResource("2_2m70b")
+shader_parameter/offset = Vector2(0, 0)
+shader_parameter/strength = Vector2(0.025, 0.05)
+shader_parameter/speed = 1.0
+shader_parameter/rot_range_count = 5.0
+shader_parameter/rot_speed = 0.1
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_x5fwu")
+_defaultTexture = ExtResource("2_q808a")
+_hoveredTexture = ExtResource("3_psbxg")
+_selectedTexture = ExtResource("4_ek2o5")
+_characters = Array[Object]([ExtResource("5_ed5gn"), ExtResource("6_qu44x")])
+
+[node name="Camera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(240, 135)
+script = ExtResource("1_2vxs5")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.0392157, 0.0784314, 1)
+
+[node name="Background" type="TextureRect" parent="CanvasLayer"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_ihrlw")
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("3_5enax")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("11_btbra")
+
+[node name="NetworkManager" type="Node" parent="."]
+script = ExtResource("12_r4bc6")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="CharacterSelect" type="TextureRect" parent="UI"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 154.0
+offset_bottom = 164.0
+texture = ExtResource("9_fb42j")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/CharacterSelect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="CharacterSelects" type="Control" parent="UI/CharacterSelect/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="Char1" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+
+[node name="Char2" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 19.0
+offset_right = 35.0
+
+[node name="Char3" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 38.0
+offset_right = 54.0
+
+[node name="Char4" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 57.0
+offset_right = 73.0
+
+[node name="Char5" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 76.0
+offset_right = 92.0
+
+[node name="Char6" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 95.0
+offset_right = 111.0
+
+[node name="Char7" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 114.0
+offset_right = 130.0
+
+[node name="Char8" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_top = 19.0
+offset_bottom = 35.0
+
+[node name="Char9" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 19.0
+offset_right = 35.0
+offset_bottom = 35.0
+
+[node name="Char10" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 19.0
+offset_right = 54.0
+offset_bottom = 35.0
+
+[node name="Char11" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 57.0
+offset_top = 19.0
+offset_right = 73.0
+offset_bottom = 35.0
+
+[node name="Char12" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 19.0
+offset_right = 92.0
+offset_bottom = 35.0
+
+[node name="Char13" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 95.0
+offset_top = 19.0
+offset_right = 111.0
+offset_bottom = 35.0
+
+[node name="Char14" parent="UI/CharacterSelect/MarginContainer/CharacterSelects" instance=ExtResource("10_ga47a")]
+layout_mode = 0
+offset_left = 114.0
+offset_top = 19.0
+offset_right = 130.0
+offset_bottom = 35.0
+
+[node name="TextureRect" type="TextureRect" parent="UI/CharacterSelect/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+texture = ExtResource("11_fqlsw")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/CharacterSelect/MarginContainer/TextureRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/CharacterSelect/MarginContainer/TextureRect/MarginContainer"]
+layout_mode = 2
+
+[node name="CharacterName" type="Label" parent="UI/CharacterSelect/MarginContainer/TextureRect/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("16_xtu30")
+text = "Kongle"
+horizontal_alignment = 1
+
+[node name="CharacterDescription" type="Label" parent="UI/CharacterSelect/MarginContainer/TextureRect/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(122, 76)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("13_j81x4")
+text = "Le kon."
+autowrap_mode = 3
+text_overrun_behavior = 1
+
+[node name="PlayButton" type="TextureButton" parent="UI"]
+unique_name_in_owner = true
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -25.0
+offset_top = -28.0
+offset_right = 25.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+texture_normal = ExtResource("14_wuchb")
+
+[node name="Label" type="Label" parent="UI/PlayButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("16_xtu30")
+text = "PLAY"
+horizontal_alignment = 1
+vertical_alignment = 1

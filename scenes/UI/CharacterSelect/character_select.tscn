@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://4nrpavgj7k7s"]
+
+[ext_resource type="Texture2D" uid="uid://dttrupy4jyajy" path="res://assets/art/ui/ui_character_select_char.png" id="1_t8ygd"]
+
+[node name="Char1" type="TextureRect"]
+offset_right = 16.0
+offset_bottom = 16.0
+texture = ExtResource("1_t8ygd")
+
+[node name="Texture" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2

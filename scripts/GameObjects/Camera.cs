@@ -46,7 +46,10 @@ public partial class Camera : Camera2D
         Zoom = Zoom.Lerp(targetZoom, Game.DeltaTime * ZoomLerpSpeed);
 
         // Position
-        Vector2 targetPos = Follow.Position + Offset;
+        Vector2 targetPos = Position;
+        if (Follow != null)
+            targetPos += Follow.Position + Offset;
+       
         Offset = Vector2.Zero;
 
         // Shake
@@ -66,7 +69,6 @@ public partial class Camera : Camera2D
         }
 
         Position = Position.Lerp(targetPos, Game.DeltaTime * PositionLerpSpeed);
-        GD.Print($"target: {targetPos}, self: {Position}");
     }
 
     public void ShakeTime(float speed, float strength, float time)

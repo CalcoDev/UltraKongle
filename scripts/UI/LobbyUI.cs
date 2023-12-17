@@ -1,7 +1,8 @@
 using Godot;
 using KongleJam.Networking.Custom;
+using KongleJam.Managers;
 
-namespace KongleJam.Managers;
+namespace KongleJam.Ui;
 
 public partial class LobbyUI : Node 
 {

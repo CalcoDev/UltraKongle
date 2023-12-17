@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3 uid="uid://by7emb0qbyw3x"]
+
+[ext_resource type="Texture2D" uid="uid://bu5napn0q6jxd" path="res://assets/art/ui/ui_character_select_laitier.png" id="1_fxlo0"]
+[ext_resource type="Script" path="res://scripts/Resources/Character.cs" id="2_1e5jx"]
+
+[resource]
+script = ExtResource("2_1e5jx")
+Name = "Laitier"
+Description = "Yummy milk yummy yummy
+>:)"
+Texture = ExtResource("1_fxlo0")

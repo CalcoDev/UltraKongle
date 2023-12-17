@@ -128,6 +128,9 @@ shape = SubResource("CircleShape2D_gn0bn")
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("11_em2ex")
 
+[node name="NetworkManager" type="Node" parent="."]
+script = ExtResource("16_us05y")
+
 [node name="UI" type="CanvasLayer" parent="."]
 script = ExtResource("12_71hrq")
 _playerDisplay = ExtResource("13_ejh64")
@@ -335,6 +338,3 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("14_1rptu")
 text = "Start Game"
-
-[node name="NetworkManager" type="Node" parent="."]
-script = ExtResource("16_us05y")
