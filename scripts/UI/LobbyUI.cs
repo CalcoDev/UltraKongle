@@ -119,7 +119,13 @@ public partial class LobbyUI : Node
 
     private void HandleCopyLobby()
     {
-        DisplayServer.ClipboardSet(NetworkManager.GetLobbyCode());
+        CopyLobbyAsync();
+    }
+
+    private async void CopyLobbyAsync()
+    {
+        string ip = await NetworkManager.GetLobbyCode();
+        DisplayServer.ClipboardSet(ip);
     }
 
     private void HandleLeaveLobby()

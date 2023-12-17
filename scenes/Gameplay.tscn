@@ -139,7 +139,9 @@ script = ExtResource("3_fa4rm")
 DIALOGUE = SubResource("Resource_tjigg")
 _rb = NodePath("RigidBody2D")
 
-[node name="InterpolationComponent" parent="Player" instance=ExtResource("7_gtaia")]
+[node name="InterpolationComponent" parent="Player" node_paths=PackedStringArray("Follow", "Follower") instance=ExtResource("7_gtaia")]
+Follow = NodePath("../RigidBody2D")
+Follower = NodePath("../Interpolated")
 
 [node name="Interpolated" type="Node2D" parent="Player"]
 

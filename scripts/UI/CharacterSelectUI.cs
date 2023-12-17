@@ -93,7 +93,7 @@ public partial class CharacterSelectUI : Node2D
 			_readyCountLabel.Visible = true;
 			_readiedPlayers += 1;
 			_readyCountLabel.Text = $"{_readiedPlayers}/{NetworkManager.Instance.Players.Count}";
-			if (_countdownTimer.TimeLeft == 0 && _countdownTimer.TimeLeft <= seconds)
+			if (_countdownTimer.TimeLeft == 0 || _countdownTimer.TimeLeft <= seconds)
 				_countdownTimer.Start(seconds);
 		};
 
@@ -104,6 +104,12 @@ public partial class CharacterSelectUI : Node2D
 		
 		_characterDisplays = GetNode<Control>("%CharacterDisplays");
 		NetworkManager.Instance.OnPlayerSelectCharacter += HandlePlayerSelectCharacter;
+
+		// Initial update of character
+		_selectedId = 0;
+		_selectedRect = _characterSelects.GetChild<TextureRect>(0);
+		_selectedRect.Texture = _selectedTexture;
+		NetworkManager.Instance.UpdatePlayerCharacter(_selectedId);
 	}
 
     public override void _ExitTree()

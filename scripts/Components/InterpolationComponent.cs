@@ -4,18 +4,16 @@ namespace KongleJam.Components;
 
 public partial class InterpolationComponent : Node
 {
-    [ExportCategory("Settings")]
+    [ExportGroup("Settings")]
     [Export] public bool UseGlobalTransform = true;
-    // [Export] public bool UpdatePosition = true;
-    // [Export] public bool UpdateRotation = true;
     [Export] public bool SyncPhysics = true;
 
-    [ExportCategory("Follow")]
-    [Export] public Node2D Follow { get; set; }
+    [ExportGroup("Follow")]
+    [Export] public Node2D Follow;
     [Export] public bool FollowTopLevel = true;
 
-    [ExportCategory("Follower")]
-    [Export] public Node2D Follower { get; set; }
+    [ExportGroup("Follower")]
+    [Export] public Node2D Follower;
     [Export] public bool FollowerTopLevel = false;
 
     private Transform2D _prevTransform;

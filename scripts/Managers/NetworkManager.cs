@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks.Dataflow;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Godot;
 using KongleJam.Networking.Custom;
+using HttpClient = System.Net.Http.HttpClient;
 
 namespace KongleJam.Managers;
 
@@ -48,6 +48,8 @@ public partial class NetworkManager : Node
     public Action<int> OnSetCountdown;
     public Action<long> OnPlayerSelectCharacter;
 
+    private Upnp _upnp;
+
     // STATIC HELPERS 
     public static bool IsSelfPid(int pid)
     {
@@ -59,11 +61,33 @@ public partial class NetworkManager : Node
         return id == Id;
     }
 
-    public static string GetLobbyCode()
+    private static string _lobbyCodeCache = "";
+    public static async Task<string> GetLobbyCode()
     {
-        string hostname = Dns.GetHostName();
-        string ip = Dns.GetHostEntry(hostname).AddressList[0].ToString();
-        return ip;
+        if (_lobbyCodeCache.Length > 0)
+            return _lobbyCodeCache;
+
+        using HttpClient httpClient = new();
+        try
+        {
+            HttpResponseMessage response =
+                await httpClient.GetAsync("https://api.ipify.org/");
+
+            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                GD.PrintErr("ERROR: Request to API was unsuccesful!");
+                return "ERROR: Could not get PUBLIC IP.";
+            }
+
+            _lobbyCodeCache = await response.Content.ReadAsStringAsync();
+            return _lobbyCodeCache;
+        }
+        catch (HttpRequestException ex)
+        {
+            GD.PrintErr("ERROR: Could not fetch public IP address: " + ex.Message);
+            return "ERROR: Could not get PUBLIC IP.";
+        }
     }
 
     // LIFECYCLE METHODS
@@ -81,8 +105,56 @@ public partial class NetworkManager : Node
         }
     }
 
+    private void MapPort(int port, string protocol)
+    {
+        var map_res = _upnp.AddPortMapping(port, port, "Kongle Port", protocol);
+        if (map_res == (int)Upnp.UpnpResult.Success)
+        {
+            GD.Print($"{GetRpcFormat()} Succesfully mapped ports!");
+            return;
+        }
+        GD.PrintErr($"{GetRpcFormat()} ERROR: Failed named UPNP port mapping!");
+    
+        map_res = _upnp.AddPortMapping(port, port, "Kongle", protocol);
+        if (map_res == (int)Upnp.UpnpResult.Success)
+        {
+            GD.Print($"{GetRpcFormat()} Succesfully mapped ports!");
+            return;
+        }
+        GD.PrintErr($"{GetRpcFormat()} ERROR: Failed unnamed UPNP port mapping! Aborting...");
+    }
+
+    private void MapPorts()
+    {
+        var res = _upnp.Discover();
+        // GD.Print($"RES: {res}, {_upnp.GetGateway().IsValidGateway()}");
+        if (res != (int)Upnp.UpnpResult.Success)
+        {
+            GD.PrintErr($"{GetRpcFormat()} ERROR: Failed discovering UPNP clients!");
+            return;
+        }
+    
+        if (_upnp.GetGateway() == null || !_upnp.GetGateway().IsValidGateway())
+        {
+            GD.PrintErr($"{GetRpcFormat()} ERROR: Invalid UPNP gateway!");
+            return;
+        }
+
+        MapPort(25565, "TCP");
+        MapPort(25565, "UDP");
+    }
+
+    private void UnmapPorts()
+    {
+        _upnp.DeletePortMapping(25565, "TCP");
+        _upnp.DeletePortMapping(25565, "UDP");
+    }
+
     public override void _Ready()
     {
+        _upnp = new Upnp();
+        MapPorts();
+
         _readyTimer = GetNode<Timer>("ReadyTimer");
         _readyTimer.OneShot = true;
         _readyTimer.Timeout += () => {
@@ -156,6 +228,11 @@ public partial class NetworkManager : Node
         Multiplayer.ConnectionFailed += () => {
             GD.PrintErr("ERROR: Connection failed!");
         };
+    }
+
+    public override void _ExitTree()
+    {
+        UnmapPorts();
     }
 
     // NERTWORKING LIFECYCLE
