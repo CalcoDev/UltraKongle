@@ -26,6 +26,7 @@ public partial class CharacterSelectUI : Node2D
 	private TextureRect _currentRect;
 	private int _currentId;
 
+	private TextureRect _selectedRect;
 	private int _selectedId;
 
 	private TextureButton _playBtn;
@@ -51,16 +52,12 @@ public partial class CharacterSelectUI : Node2D
 			TextureRect texture = select.GetNode<TextureRect>("%Texture");
 			texture.Texture = _characters[idx].Texture;
 			select.MouseEntered += () => {
-				texture.Texture = _hoveredTexture;
+				select.Texture = _hoveredTexture;
 				_currentRect = select;
-				_currentId = int.Parse(select.Name.ToString()[4..]);
-
-				GD.Print($"Entered {_currentId}");
+				_currentId = int.Parse(select.Name.ToString()[4..]) - 1;
 			};
 			select.MouseExited += () => {
-				GD.Print($"Exit {_currentId}");
-				
-				texture.Texture = _defaultTexture;
+				select.Texture = _defaultTexture;
 				_currentRect = null;
 				_currentId = -1;
 			};
@@ -73,18 +70,23 @@ public partial class CharacterSelectUI : Node2D
 			TextureButton.SignalName.ButtonDown,
 			new Callable(this, MethodName.HandlePlay)	
 		);
+
+		_characterName = GetNode<Label>("%CharacterName");
+		_characterDescription = GetNode<Label>("%CharacterDescription");
     }
 
     public override void _Process(double delta)
     {
-		if (Input.IsMouseButtonPressed(MouseButton.Left) && _currentRect != null)
+		if (Input.IsMouseButtonPressed(MouseButton.Left)
+			&& _currentRect != null && _currentRect != _selectedRect)
 		{
-			_currentRect.GetNode<TextureRect>("%Texture").Texture = _selectedTexture;
-			_selectedId = _currentId;
+			if (_selectedRect != null)
+				_selectedRect.Texture = _defaultTexture;
 
-			// GD.Print($"Selected: {_selectedId}");
-			
-			// UI_SelectCharacter();
+			_currentRect.Texture = _selectedTexture;
+			_selectedId = _currentId;
+			_selectedRect = _currentRect;
+			UI_SelectCharacter();
 		}
 
 		Vector2 mouseOffset =
@@ -95,7 +97,6 @@ public partial class CharacterSelectUI : Node2D
 
 	private void HandlePlay()
 	{
-		GD.Print($"STARTING PLAY GAME with {_selectedId}!");
 	}
 				
 	private void UI_SelectCharacter()

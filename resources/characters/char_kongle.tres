@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="Character" load_steps=2 format=3 uid="uid://c6icjgnd3vldw"]
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3 uid="uid://c6icjgnd3vldw"]
 
 [ext_resource type="Script" path="res://scripts/Resources/Character.cs" id="1_elx7a"]
+[ext_resource type="Texture2D" uid="uid://dy5r2l1sbgkv5" path="res://assets/art/ui/ui_character_select_kongle.png" id="1_wens2"]
 
 [resource]
 script = ExtResource("1_elx7a")
-Name = ""
-Description = ""
+Name = "Kongle"
+Description = "I am the kongle.
+My kongles fall on your head and kill u."
+Texture = ExtResource("1_wens2")
