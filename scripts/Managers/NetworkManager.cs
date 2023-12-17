@@ -466,7 +466,7 @@ public partial class NetworkManager : Node
             
             if (readyCount == 1 || readyCount == Players.Count)
             {
-                int sec = readyCount == 1 ? 60 : 5;
+                int sec = readyCount == 1 ? (Players.Count == 1 ? 5 : 60) : 5;
                 if (_readyTimer.TimeLeft == 0f || _readyTimer.TimeLeft > sec)
                     _readyTimer.Start(sec);
 
