@@ -1,0 +1,91 @@
+[gd_scene load_steps=15 format=3 uid="uid://cpklxqcy6mpee"]
+
+[ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="1_xby47"]
+[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="2_y1hhq"]
+[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="3_i5cak"]
+[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_slw11"]
+[ext_resource type="PackedScene" uid="uid://c2uvefidrt3fg" path="res://scenes/Components/state_machine_component.tscn" id="5_6s4f8"]
+[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="5_viq02"]
+[ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="6_lhhtp"]
+[ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="7_f15yy"]
+[ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="8_0736m"]
+
+[sub_resource type="Resource" id="Resource_2hky5"]
+script = ExtResource("3_i5cak")
+Speaker = ExtResource("2_y1hhq")
+Message = "I am thje milkmam.
+Milk is delicious."
+AutoPlay = false
+PlaybackSpeedMult = 1.0
+
+[sub_resource type="Resource" id="Resource_tjigg"]
+script = ExtResource("3_i5cak")
+Speaker = ExtResource("4_slw11")
+Message = "Yo yo yo.
+I am Kongle."
+AutoPlay = false
+PlaybackSpeedMult = 2.0
+Next = SubResource("Resource_2hky5")
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
+friction = 0.2
+bounce = 0.2
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jq3st"]
+radius = 3.5
+height = 8.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_d4dqu"]
+size = Vector2(9, 4.5)
+
+[node name="Player" type="Node2D" node_paths=PackedStringArray("_rb", "_groundedChecker", "_sm")]
+position = Vector2(242, 101)
+script = ExtResource("1_xby47")
+DIALOGUE = SubResource("Resource_tjigg")
+_rb = NodePath("RigidBody2D")
+_groundedChecker = NodePath("GroundedChecker")
+_sm = NodePath("StateMachineComponent")
+
+[node name="StateMachineComponent" parent="." instance=ExtResource("5_6s4f8")]
+
+[node name="InterpolationComponent" parent="." instance=ExtResource("5_viq02")]
+
+[node name="Interpolated" type="Node2D" parent="."]
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Visuals"]
+position = Vector2(-4, -7)
+texture = ExtResource("6_lhhtp")
+centered = false
+
+[node name="Blob" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Blob"]
+position = Vector2(-2, 8)
+texture = ExtResource("7_f15yy")
+centered = false
+
+[node name="Arrow" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Arrow"]
+position = Vector2(-4, -13)
+texture = ExtResource("8_0736m")
+centered = false
+
+[node name="RigidBody2D" type="RigidBody2D" parent="."]
+collision_layer = 2
+physics_material_override = SubResource("PhysicsMaterial_oeg8w")
+lock_rotation = true
+continuous_cd = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RigidBody2D"]
+position = Vector2(0.5, -1)
+shape = SubResource("CapsuleShape2D_jq3st")
+
+[node name="GroundedChecker" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundedChecker"]
+position = Vector2(0.5, 4.25)
+shape = SubResource("RectangleShape2D_d4dqu")

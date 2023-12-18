@@ -26,11 +26,15 @@ public partial class InterpolationComponent : Node
         if (Follower == null || Follow == null)
             return;
 
+        Vector2 prevPos = Follow.GlobalPosition;
         if (FollowerTopLevel)
             Follower.TopLevel = true;
 
         if (FollowTopLevel)
             Follow.TopLevel = true;
+        
+        Follow.GlobalPosition = prevPos;
+        Follower.GlobalPosition = prevPos;
     }
 
     public override void _Process(double delta)

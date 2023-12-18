@@ -1,15 +1,9 @@
-[gd_scene load_steps=26 format=3 uid="uid://cfas0332xrlnc"]
+[gd_scene load_steps=16 format=3 uid="uid://cfas0332xrlnc"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Camera.cs" id="1_22qnp"]
 [ext_resource type="Shader" path="res://resources/shaders/black_hole.gdshader" id="1_ysx5e"]
-[ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="2_b3ppq"]
-[ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="2_gp38v"]
-[ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_1lb1s"]
-[ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="4_5ecr1"]
-[ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="4_447wg"]
-[ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="4_vjpmf"]
-[ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="5_kksbf"]
-[ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="5_ltxpe"]
+[ext_resource type="TileSet" uid="uid://jt35jyiftnly" path="res://resources/tilesets/prototype_tileset_new.tres" id="2_s70j3"]
+[ext_resource type="PackedScene" uid="uid://cpklxqcy6mpee" path="res://scenes/GameObjects/Entities/player.tscn" id="4_gcfg4"]
 [ext_resource type="Texture2D" uid="uid://ctlglvjbnh8r7" path="res://assets/art/ui/ui_dialogue_sprite.png" id="8_jbyhr"]
 [ext_resource type="FontFile" uid="uid://uecs7ae17fty" path="res://assets/fonts/m6x11.ttf" id="9_jtcfg"]
 [ext_resource type="Texture2D" uid="uid://cnelj20iekfyf" path="res://assets/art/ui/speakers/ui_speaker_kongle.png" id="10_axmtb"]
@@ -34,30 +28,6 @@ shader_parameter/u_center = Vector2(0, 0)
 shader_parameter/u_offset = 0.435
 shader_parameter/u_inner_radius = 0.045
 shader_parameter/NOISE = SubResource("NoiseTexture2D_ku64f")
-
-[sub_resource type="Resource" id="Resource_2hky5"]
-script = ExtResource("5_ltxpe")
-Speaker = ExtResource("4_447wg")
-Message = "I am thje milkmam.
-Milk is delicious."
-AutoPlay = false
-PlaybackSpeedMult = 1.0
-
-[sub_resource type="Resource" id="Resource_tjigg"]
-script = ExtResource("5_ltxpe")
-Speaker = ExtResource("4_1lb1s")
-Message = "Yo yo yo.
-I am Kongle."
-AutoPlay = false
-PlaybackSpeedMult = 2.0
-Next = SubResource("Resource_2hky5")
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
-friction = 0.8
-bounce = 0.4
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_gn0bn"]
-radius = 4.0
 
 [sub_resource type="Animation" id="Animation_ypf10"]
 length = 0.001
@@ -115,11 +85,15 @@ _data = {
 
 [node name="Main" type="Node2D"]
 
-[node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("Follow")]
+[node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(240, 135)
 script = ExtResource("1_22qnp")
-Follow = NodePath("../Player")
 Static = true
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource("2_s70j3")
+format = 2
+layer_0/tile_data = PackedInt32Array(3, 0, 0, 65539, 0, 0, 65538, 0, 0, 65537, 0, 0, 65536, 0, 0, 8, 0, 0, 9, 0, 0, 10, 0, 0, 11, 0, 0, 65575, 0, 0, 65574, 0, 0, 65573, 0, 0, 65572, 0, 0, 31, 0, 0, 30, 0, 0, 29, 0, 0, 28, 0, 0, 131094, 0, 0, 131095, 0, 0, 131089, 0, 0, 131088, 0, 0, 131087, 0, 0, 65551, 0, 0, 65550, 0, 0, 65549, 0, 0, 65548, 0, 0, 65547, 0, 0, 12, 0, 0, 13, 0, 0, 14, 0, 0, 15, 0, 0, 16, 0, 0, 65552, 0, 0, 65553, 0, 0, 17, 0, 0, 131096, 0, 0, 65560, 0, 0, 65561, 0, 0, 65562, 0, 0, 65563, 0, 0, 27, 0, 0, 26, 0, 0, 25, 0, 0, 24, 0, 0, 23, 0, 0, 22, 0, 0, 65558, 0, 0, 65559, 0, 0, 36, 0, 0, 37, 0, 0, 38, 0, 0, 39, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 65564, 0, 0, 65565, 0, 0, 131097, 0, 0, 1441792, 0, 0, 1441793, 0, 0, 1441794, 0, 0, 1441795, 0, 0, 1441796, 0, 0, 1376259, 0, 0, 1376258, 0, 0, 1376257, 0, 0, 1376256, 0, 0, 1310720, 0, 0, 1245184, 0, 0, 1179648, 0, 0, 1114112, 0, 0, 1048576, 0, 0, 983040, 0, 0, 917504, 0, 0, 851968, 0, 0, 786432, 0, 0, 720896, 0, 0, 655360, 0, 0, 589824, 0, 0, 524288, 0, 0, 458752, 0, 0, 393216, 0, 0, 327680, 0, 0, 262144, 0, 0, 196608, 0, 0, 131072, 0, 0, 131111, 0, 0, 196647, 0, 0, 262183, 0, 0, 327719, 0, 0, 393255, 0, 0, 458791, 0, 0, 524327, 0, 0, 589863, 0, 0, 655399, 0, 0, 720935, 0, 0, 786471, 0, 0, 852007, 0, 0, 1048615, 0, 0, 1114151, 0, 0, 1179687, 0, 0, 1245223, 0, 0, 1310759, 0, 0, 1376295, 0, 0, 917543, 0, 0, 983079, 0, 0, 1441831, 0, 0, 1441830, 0, 0, 1441829, 0, 0, 4, 0, 0, 65540, 0, 0, 35, 0, 0, 65571, 0, 0, 65546, 0, 0, 131086, 0, 0, 1441827, 0, 0, 1441828, 0, 0, 1376292, 0, 0, 1376293, 0, 0, 1376294, 0, 0, 1441822, 0, 0, 1376286, 0, 0, 1376285, 0, 0, 1376284, 0, 0, 1441801, 0, 0, 1376265, 0, 0, 1376266, 0, 0, 1376267, 0, 0, 1376268, 0, 0, 1376269, 0, 0, 1376270, 0, 0, 1376271, 0, 0, 1376272, 0, 0, 1376273, 0, 0, 1376278, 0, 0, 1376279, 0, 0, 1376280, 0, 0, 1376281, 0, 0, 1376282, 0, 0, 1376283, 0, 0, 1441820, 0, 0, 1441821, 0, 0, 1441819, 0, 0, 1441818, 0, 0, 1441817, 0, 0, 1441816, 0, 0, 1441815, 0, 0, 1441814, 0, 0, 1441809, 0, 0, 1441808, 0, 0, 1441802, 0, 0, 1441803, 0, 0, 1441804, 0, 0, 1441805, 0, 0, 1441806, 0, 0, 1441807, 0, 0, 1310737, 0, 0, 1245201, 0, 0, 1245200, 0, 0, 1245199, 0, 0, 1310735, 0, 0, 1310736, 0, 0, 1245206, 0, 0, 1310742, 0, 0, 1310743, 0, 0, 1310744, 0, 0, 1245208, 0, 0, 1245207, 0, 0, 917511, 0, 0, 917512, 0, 0, 917513, 0, 0, 917514, 0, 0, 917515, 0, 0, 983048, 0, 0, 983049, 0, 0, 1048584, 0, 0, 983050, 0, 0, 917532, 0, 0, 917533, 0, 0, 917534, 0, 0, 917535, 0, 0, 983070, 0, 0, 983069, 0, 0, 983071, 0, 0, 1048607, 0, 0, 917536, 0, 0, 458757, 0, 0, 458756, 0, 0, 458755, 0, 0, 458754, 0, 0, 458753, 0, 0, 524290, 0, 0, 524289, 0, 0, 589826, 0, 0, 589825, 0, 0, 458790, 0, 0, 458789, 0, 0, 458788, 0, 0, 589861, 0, 0, 589862, 0, 0, 524326, 0, 0, 524325, 0, 0, 458787, 0, 0, 458786, 0, 0, 851969, 0, 0, 851970, 0, 0, 851971, 0, 0, 852006, 0, 0, 852005, 0, 0, 852004, 0, 0, 917540, 0, 0, 917507, 0, 0, 917506, 0, 0, 983042, 0, 0, 1048578, 0, 0, 1114114, 0, 0, 983041, 0, 0, 917505, 0, 0, 1048577, 0, 0, 1114113, 0, 0, 1179649, 0, 0, 1245185, 0, 0, 1310721, 0, 0, 917541, 0, 0, 917542, 0, 0, 983077, 0, 0, 1048613, 0, 0, 1114149, 0, 0, 1114150, 0, 0, 1179686, 0, 0, 1245222, 0, 0, 1310758, 0, 0, 983078, 0, 0, 1048614, 0, 0, 1376264, 0, 0, 1441800, 0, 0, 1376287, 0, 0, 1441823, 0, 0, 786433, 0, 0, 786470, 0, 0, 393254, 0, 0, 327718, 0, 0, 327681, 0, 0, 393217, 0, 0, 851989, 0, 0, 851988, 0, 0, 851987, 0, 0, 851986, 0, 0, 589838, 0, 0, 589837, 0, 0, 589836, 0, 0, 589851, 0, 0, 589850, 0, 0, 589849, 0, 0)
 
 [node name="BlackHole" type="CanvasLayer" parent="."]
 layer = -1
@@ -133,46 +107,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("_rb")]
-position = Vector2(108, 53)
-script = ExtResource("2_b3ppq")
-DIALOGUE = SubResource("Resource_tjigg")
-_rb = NodePath("RigidBody2D")
-
-[node name="InterpolationComponent" parent="Player" instance=ExtResource("4_5ecr1")]
-
-[node name="Interpolated" type="Node2D" parent="Player"]
-
-[node name="Visuals" type="Node2D" parent="Player"]
-
-[node name="Sprite2D" type="Sprite2D" parent="Player/Visuals"]
-position = Vector2(-4, -7)
-texture = ExtResource("2_gp38v")
-centered = false
-
-[node name="Blob" type="Node2D" parent="Player"]
-
-[node name="Sprite2D" type="Sprite2D" parent="Player/Blob"]
-position = Vector2(-2, 8)
-texture = ExtResource("4_vjpmf")
-centered = false
-
-[node name="Arrow" type="Node2D" parent="Player"]
-
-[node name="Sprite2D" type="Sprite2D" parent="Player/Arrow"]
-position = Vector2(-4, -13)
-texture = ExtResource("5_kksbf")
-centered = false
-
-[node name="RigidBody2D" type="RigidBody2D" parent="Player"]
-collision_layer = 2
-physics_material_override = SubResource("PhysicsMaterial_oeg8w")
-lock_rotation = true
-continuous_cd = 1
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RigidBody2D"]
-position = Vector2(1, -1)
-shape = SubResource("CircleShape2D_gn0bn")
+[node name="Player" parent="." instance=ExtResource("4_gcfg4")]
 
 [node name="DialogueManager" type="Node" parent="." node_paths=PackedStringArray("_anim", "_dialogueControl", "_speakerSprite", "_text")]
 script = ExtResource("11_rxy5x")
@@ -183,6 +118,7 @@ _text = NodePath("UI/DialogueBackground/MarginContainer/Label")
 BaseSpeed = 10.0
 
 [node name="UI" type="CanvasLayer" parent="DialogueManager"]
+visible = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="DialogueManager/UI"]
 libraries = {

@@ -77,6 +77,12 @@ public partial class StateMachineComponent : Node
         }
     }
 
+    public void SetStateForced(int state)
+    {
+        _state = state;
+        // TODO(Calco): figure this out
+    }
+
     public int Update()
     {
         if (_updates[_state] != null)
