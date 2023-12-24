@@ -78,6 +78,8 @@ dash={
 2d_physics/layer_1="level_geometry"
 2d_physics/layer_2="player"
 2d_physics/layer_3="spikes"
+2d_physics/layer_5="hitboxes"
+2d_physics/layer_6="hurtboxes"
 
 [physics]
 

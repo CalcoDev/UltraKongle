@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://dr44kuufdnxqa"]
+
+[ext_resource type="Script" path="res://scripts/Components/HurtboxComponent.cs" id="1_pp1cs"]
+
+[node name="HurtboxComponent" type="Area2D" node_paths=PackedStringArray("_invincibilityTimer")]
+script = ExtResource("1_pp1cs")
+InvincibilityTime = 0.05
+_invincibilityTimer = NodePath("InvincibilityTimer")
+
+[node name="InvincibilityTimer" type="Timer" parent="."]

@@ -23,6 +23,7 @@ public partial class Player : Node2D
     [Export] private StateMachineComponent _sm;
     [Export] private HealthComponent _health;
     [Export] private AnimationPlayer _anim;
+    // [Export] private HurtboxComponent _hurtbox;
 
     private const float YeetMaxDist = 100;
     private const float YeetMaxDistShow = 25;
@@ -98,6 +99,8 @@ public partial class Player : Node2D
 
     public override void _Ready()
     {
+        _anim.Play("normal");
+
         _groundedChecker.BodyEntered += OnEnterGround;
         _groundedChecker.BodyExited += OnExitGround;
 
@@ -125,6 +128,8 @@ public partial class Player : Node2D
             _healthbar.MinValue = 0;
             _healthbar.MaxValue = max;
             _healthbar.Value = curr;
+
+            GD.Print($"    ----         {NetworkManager.GetRpcFormat()} Got hit and synced!");
 
             _sync.SyncValue("player_health", Variant.From(curr));
             _sync.SyncValue("player_maxhealth", Variant.From(max));

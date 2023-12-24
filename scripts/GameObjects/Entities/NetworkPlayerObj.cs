@@ -46,6 +46,8 @@ public partial class NetworkPlayerObj : Node2D
 
         SyncHealth();
         SyncMaxHealth();
+
+        _anim.Play("normal");
     }
 
     public override void _ExitTree()
@@ -56,6 +58,8 @@ public partial class NetworkPlayerObj : Node2D
     private bool _dead = false;
     private void OnPlayerDeath(long id)
     {
+        _anim.Play("normal");
+        
         GD.Print($"{NetworkManager.GetRpcFormat()} Received signal of {id} death.");
 
         if (id != NetworkId)
