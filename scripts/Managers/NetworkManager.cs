@@ -527,8 +527,8 @@ public partial class NetworkManager : Node
                 return acc + (kvp.Value.IsReady ? 1 : 0);
             });
             
-            if (readyCount == 1 || readyCount == Players.Count)
-            {
+            // if (readyCount == 1 || readyCount == Players.Count)
+            // {
                 int sec = Players.Count == 1 ? 0 : readyCount == 1 ? (Players.Count == 1 ? 5 : 60) : 5;
                 if (_readyTimer.TimeLeft == 0f || _readyTimer.TimeLeft > sec)
                 {
@@ -545,7 +545,7 @@ public partial class NetworkManager : Node
                         new Variant[] { sec }
                     );
                 });
-            }
+            // }
         }
     }
 
