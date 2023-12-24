@@ -23,6 +23,8 @@ public partial class Map : Node2D
     public override void _Ready()
     {
 		Game.Pause();
+		SetProcess(true);
+		ProcessMode = ProcessModeEnum.Always;
 
 		foreach (Node2D child in GetNode("%Spawnpoints").GetChildren().Cast<Node2D>())
 			_spawnPoints.Add(child.GlobalPosition);
@@ -74,7 +76,6 @@ public partial class Map : Node2D
 			
 			AddChild(prefab);
 
-			SetProcess(true);
 			GD.Print($"{NetworkManager.GetRpcFormat()} Added player {player.Id} ({player.Username}) with index {player.Index} at position {spawnPos}!");
 		}
     }

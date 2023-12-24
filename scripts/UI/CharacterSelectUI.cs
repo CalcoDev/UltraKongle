@@ -37,6 +37,8 @@ public partial class CharacterSelectUI : Node2D
 
 	private int _readiedPlayers = 0;
 
+	private bool _isReady = false;
+
     public override void _Ready()
     {
 		_cam = GetNode<Camera>("%Camera");
@@ -58,6 +60,9 @@ public partial class CharacterSelectUI : Node2D
 			TextureRect texture = select.GetNode<TextureRect>("%Texture");
 			texture.Texture = Game.Instance.Characters[idx].Texture;
 			select.MouseEntered += () => {
+				if (_isReady)
+					return;
+
 				if (_selectedRect != select)
 					select.Texture = _hoveredTexture;
 				
@@ -65,6 +70,9 @@ public partial class CharacterSelectUI : Node2D
 				_currentId = int.Parse(select.Name.ToString()[4..]) - 1;
 			};
 			select.MouseExited += () => {
+				if (_isReady)
+					return;
+
 				if (_selectedRect != select)
 					select.Texture = _defaultTexture;
 				
@@ -85,15 +93,7 @@ public partial class CharacterSelectUI : Node2D
 		_characterDescription = GetNode<Label>("%CharacterDescription");
 
 		_countdownTimer = GetNode<Timer>("CountdownTimer");
-		NetworkManager.Instance.OnSetCountdown += (seconds) => {
-			_countdownLabel.Visible = true;
-			_readyCountLabel.Visible = true;
-			_readiedPlayers += 1;
-			_readyCountLabel.Text = $"{_readiedPlayers}/{NetworkManager.Instance.Players.Count}";
-			if (_countdownTimer.TimeLeft == 0 || _countdownTimer.TimeLeft > seconds)
-				_countdownTimer.Start(seconds);
-		};
-
+		NetworkManager.Instance.OnSetCountdown += OnSetCountdown;
 		_countdownLabel = GetNode<Label>("%CountdownLabel");
 		_countdownLabel.Visible = false;
 		_readyCountLabel = GetNode<Label>("%ReadyCountLabel");
@@ -107,11 +107,24 @@ public partial class CharacterSelectUI : Node2D
 		_selectedRect = _characterSelects.GetChild<TextureRect>(0);
 		_selectedRect.Texture = _selectedTexture;
 		NetworkManager.Instance.UpdatePlayerCharacter(_selectedId);
+		
+		GD.Print("CHARACTER SELECT READY!!!");
 	}
 
     public override void _ExitTree()
     {
 		NetworkManager.Instance.OnPlayerSelectCharacter -= HandlePlayerSelectCharacter;
+		NetworkManager.Instance.OnSetCountdown -= OnSetCountdown;
+	}
+
+	private void OnSetCountdown(int seconds)
+	{
+		_countdownLabel.Visible = true;
+		_readyCountLabel.Visible = true;
+		_readiedPlayers += 1;
+		_readyCountLabel.Text = $"{_readiedPlayers}/{NetworkManager.Instance.Players.Count}";
+		if (_countdownTimer.TimeLeft == 0 || _countdownTimer.TimeLeft > seconds)
+			_countdownTimer.Start(seconds);
 	}
 
     // NETWORK MANAGER HANDLERS
@@ -130,7 +143,7 @@ public partial class CharacterSelectUI : Node2D
     public override void _Process(double delta)
     {
 		if (Input.IsMouseButtonPressed(MouseButton.Left)
-			&& _currentRect != null && _currentRect != _selectedRect)
+			&& _currentRect != null && _currentRect != _selectedRect && !_isReady)
 		{
 			if (_selectedRect != null)
 				_selectedRect.Texture = _defaultTexture;
@@ -152,6 +165,7 @@ public partial class CharacterSelectUI : Node2D
 	private void HandleReady()
 	{
 		_readyBtn.Disabled = true;
+		_isReady = true;
 		NetworkManager.Instance.AnnounceReady();
 	}
 				

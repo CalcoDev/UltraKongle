@@ -22,6 +22,15 @@ public partial class InterpolationComponent : Node
     private Transform2D _prevTransform;
     private Transform2D _currTransform;
 
+    public void ForceSetPosition(Vector2 pos)
+    {
+        Follower.GlobalPosition = pos;
+        Follow.GlobalPosition = pos;
+
+        _prevTransform = Follow.GlobalTransform;
+        _currTransform = Follow.GlobalTransform;
+    }
+
     public override void _Ready()
     {
         ProcessPriority = 100;

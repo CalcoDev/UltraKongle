@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cpklxqcy6mpee"]
+[gd_scene load_steps=25 format=3 uid="uid://cpklxqcy6mpee"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="1_xby47"]
 [ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="2_y1hhq"]
@@ -6,10 +6,13 @@
 [ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_slw11"]
 [ext_resource type="PackedScene" uid="uid://c2uvefidrt3fg" path="res://scenes/Components/state_machine_component.tscn" id="5_6s4f8"]
 [ext_resource type="PackedScene" uid="uid://dngq0wj0hn5o" path="res://scenes/Components/network_sync_component.tscn" id="5_g8sm5"]
+[ext_resource type="PackedScene" uid="uid://bn6apckf15jg5" path="res://scenes/Components/health_component.tscn" id="5_h87v4"]
 [ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="5_viq02"]
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="6_lhhtp"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="7_f15yy"]
 [ext_resource type="Texture2D" uid="uid://ht0qrj0vx66b" path="res://assets/entities/player_arrow.png" id="8_0736m"]
+[ext_resource type="Texture2D" uid="uid://cy80lhjfgctns" path="res://assets/entities/player_dash.png" id="9_f51ul"]
+[ext_resource type="FontFile" uid="uid://btcmf5wp4uoe0" path="res://assets/fonts/m3x6.ttf" id="11_myydk"]
 
 [sub_resource type="Resource" id="Resource_2hky5"]
 script = ExtResource("3_i5cak")
@@ -28,6 +31,58 @@ AutoPlay = false
 PlaybackSpeedMult = 2.0
 Next = SubResource("Resource_2hky5")
 
+[sub_resource type="Animation" id="Animation_ij708"]
+resource_name = "dash"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visuals/Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("9_f51ul")]
+}
+
+[sub_resource type="Animation" id="Animation_vldte"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visuals/Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("6_lhhtp")]
+}
+
+[sub_resource type="Animation" id="Animation_aoa3l"]
+resource_name = "normal"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visuals/Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("6_lhhtp")]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_pd3bh"]
+_data = {
+"RESET": SubResource("Animation_vldte"),
+"dash": SubResource("Animation_ij708"),
+"normal": SubResource("Animation_aoa3l")
+}
+
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_oeg8w"]
 friction = 0.2
 bounce = 0.2
@@ -39,19 +94,34 @@ height = 8.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d4dqu"]
 size = Vector2(9, 4.5)
 
-[node name="Player" type="Node2D" node_paths=PackedStringArray("_sync", "_rb", "_groundedChecker", "_sm")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frvqq"]
+bg_color = Color(0.458824, 0.141176, 0.219608, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c7w80"]
+bg_color = Color(0.458824, 0.654902, 0.262745, 1)
+
+[node name="Player" type="Node2D" node_paths=PackedStringArray("_sync", "_rb", "_groundedChecker", "_sm", "_health", "_anim")]
 script = ExtResource("1_xby47")
 DIALOGUE = SubResource("Resource_tjigg")
 _sync = NodePath("NetworkSyncComponent")
 _rb = NodePath("RigidBody2D")
 _groundedChecker = NodePath("GroundedChecker")
 _sm = NodePath("StateMachineComponent")
+_health = NodePath("HealthComponent")
+_anim = NodePath("AnimationPlayer")
+
+[node name="HealthComponent" parent="." instance=ExtResource("5_h87v4")]
 
 [node name="NetworkSyncComponent" parent="." instance=ExtResource("5_g8sm5")]
 
 [node name="StateMachineComponent" parent="." instance=ExtResource("5_6s4f8")]
 
 [node name="InterpolationComponent" parent="." instance=ExtResource("5_viq02")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_pd3bh")
+}
 
 [node name="Interpolated" type="Node2D" parent="."]
 
@@ -63,6 +133,7 @@ texture = ExtResource("6_lhhtp")
 centered = false
 
 [node name="Blob" type="Node2D" parent="."]
+z_index = 1000
 
 [node name="Sprite2D" type="Sprite2D" parent="Blob"]
 position = Vector2(-2, 8)
@@ -70,6 +141,7 @@ texture = ExtResource("7_f15yy")
 centered = false
 
 [node name="Arrow" type="Node2D" parent="."]
+z_index = 1000
 
 [node name="Sprite2D" type="Sprite2D" parent="Arrow"]
 position = Vector2(-4, -13)
@@ -82,6 +154,8 @@ collision_layer = 2
 physics_material_override = SubResource("PhysicsMaterial_oeg8w")
 lock_rotation = true
 continuous_cd = 1
+max_contacts_reported = 10
+contact_monitor = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RigidBody2D"]
 position = Vector2(0.5, -1)
@@ -93,3 +167,36 @@ collision_layer = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GroundedChecker"]
 position = Vector2(0.5, 4.25)
 shape = SubResource("RectangleShape2D_d4dqu")
+
+[node name="Username" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = -77.0
+offset_top = -20.0
+offset_right = 79.0
+offset_bottom = -7.0
+theme_override_fonts/font = ExtResource("11_myydk")
+text = "Username"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="Healthbar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+z_index = 999
+z_as_relative = false
+offset_left = -18.0
+offset_top = 5.0
+offset_right = 19.0
+offset_bottom = 10.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("11_myydk")
+theme_override_styles/background = SubResource("StyleBoxFlat_frvqq")
+theme_override_styles/fill = SubResource("StyleBoxFlat_c7w80")
+value = 50.0
+show_percentage = false
+
+[node name="DashCooldownTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="DashCollTimer" type="Timer" parent="."]
+wait_time = 0.05
+one_shot = true

@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using Godot;
 using KongleJam.Managers;
 
@@ -28,9 +29,12 @@ public partial class Camera : Camera2D
     private float _shakeTime;
     private bool _shakeFade;
 
+    private Vector2 _startPos;
     public override void _Ready()
     {
         Game.Camera = this;
+
+        _startPos = Position;
 
         _noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin;
     }
@@ -46,9 +50,11 @@ public partial class Camera : Camera2D
         Zoom = Zoom.Lerp(targetZoom, Game.DeltaTime * ZoomLerpSpeed);
 
         // Position
-        Vector2 targetPos = Position;
+        Vector2 targetPos;
         if (Follow != null)
-            targetPos += Follow.Position + Offset;
+            targetPos = Follow.Position + Offset;
+        else
+            targetPos = _startPos;
        
         Offset = Vector2.Zero;
 
@@ -87,5 +93,31 @@ public partial class Camera : Camera2D
 
         _shakeDecay = decay;
         _shakeFade = true;
+    }
+
+    public bool IsOutOfBounds(Vector2 vec, float epsilon = 2f)
+    {
+        Vector2 wrapped = WrapAroundBounds(vec, epsilon);
+        return !vec.Equals(wrapped);
+    }
+
+    public Vector2 WrapAroundBounds(Vector2 vec, float epsilon = 2f)
+    {
+        Vector2 size = GetViewportRect().Size * 0.5f;
+        Vector2 pos = GlobalPosition;
+
+        // X Axis
+        if (vec.X < pos.X - size.X - epsilon)
+            vec.X = pos.X + size.X + epsilon * 0.75f;
+        if (vec.X > pos.X + size.X + epsilon)
+            vec.X = pos.X - size.X - epsilon * 0.75f;
+        
+        // Y Axis
+        if (vec.Y < pos.Y - size.Y - epsilon)
+            vec.Y = pos.Y + size.Y + epsilon * 0.75f;
+        if (vec.Y > pos.Y + size.Y + epsilon)
+            vec.Y = pos.Y - size.Y - epsilon * 0.75f;
+
+        return vec;
     }
 }

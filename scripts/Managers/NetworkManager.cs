@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Godot;
+using KongleJam._Old;
 using KongleJam.Networking.Custom;
 using HttpClient = System.Net.Http.HttpClient;
 
@@ -54,6 +55,7 @@ public partial class NetworkManager : Node
 
 
     public Action<long, string, Variant> OnRpcSyncThing;
+    public Action<long> OnPlayerDied;
 
     // STATIC HELPERS 
     public static bool IsSelfPid(int pid)
@@ -162,16 +164,7 @@ public partial class NetworkManager : Node
 
         _readyTimer = GetNode<Timer>("ReadyTimer");
         _readyTimer.OneShot = true;
-        _readyTimer.Timeout += () => {
-            GD.Print("Ready timer timeout. Broadcasting enter game...");
-           
-            var rng = new RandomNumberGenerator();
-            int map_idx = rng.RandiRange(0, Game.Instance.Maps.Count - 1);
-            
-            Broadcast(true, (player) => {
-                RpcId(player.Id, MethodName.RpcEnterGame, map_idx);
-            });
-        };
+        _readyTimer.Timeout += BroadcastStartGame;
 
         Multiplayer.PeerConnected += (id) => {
             if (IsServer)
@@ -358,6 +351,13 @@ public partial class NetworkManager : Node
         });
     }
 
+    public void AnnounceDeath()
+    {
+        Broadcast(true, (player) => {
+            RpcId(player.Id, MethodName.RpcAnnounceDeath, Id);
+        });
+    }
+
     public void UpdatePlayerCharacter(int idx)
     {
         GD.Print($"{GetRpcFormat()} Tried updating player character!");
@@ -384,11 +384,51 @@ public partial class NetworkManager : Node
         RpcId(ServerPeerId, MethodName.RpcPlayerReady, Id);
     }
 
+    public void BroadcastStartGame()
+    {
+        _playerDeathCount = 0;
+
+        GD.Print("Ready timer timeout. Broadcasting enter game...");
+        
+        var rng = new RandomNumberGenerator();
+        int map_idx = rng.RandiRange(0, Game.Instance.Maps.Count - 1);
+        
+        Broadcast(true, (player) => {
+            RpcId(player.Id, MethodName.RpcEnterGame, map_idx);
+        });
+    }
+
     // RPC METHODS
     public static string GetRpcFormat()
     {
         string type = IsServer ? "Server" : "Client";
         return $"RPC {Id} ({type}): ";
+    }
+    
+    private int _playerDeathCount = 0;
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+    private void RpcAnnounceDeath(long id)
+    {
+        OnPlayerDied?.Invoke(id);
+        GD.Print($"{GetRpcFormat()} Acknowledged the death of player {id}.");
+
+        if (IsServer)
+        {
+            if (!Players[id].Died)
+            {
+                _playerDeathCount += 1;
+                GD.Print("         increased death count");
+            }
+            
+            if (_playerDeathCount == Players.Count)
+            {
+                GoToCharacterSelect();
+                GD.Print($"{GetRpcFormat()} All players died, broadcasting go to character select!");
+            }
+        }
+        
+        Players[id].Died = true;
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
@@ -489,9 +529,14 @@ public partial class NetworkManager : Node
             
             if (readyCount == 1 || readyCount == Players.Count)
             {
-                int sec = readyCount == 1 ? (Players.Count == 1 ? 5 : 60) : 5;
+                int sec = Players.Count == 1 ? 0 : readyCount == 1 ? (Players.Count == 1 ? 5 : 60) : 5;
                 if (_readyTimer.TimeLeft == 0f || _readyTimer.TimeLeft > sec)
-                    _readyTimer.Start(sec);
+                {
+                    if (sec == 0)
+                        BroadcastStartGame();
+                    else
+                        _readyTimer.Start(sec);
+                }
 
                 Broadcast(true, (player) => {
                     RpcId(
@@ -514,6 +559,12 @@ public partial class NetworkManager : Node
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcGoToCharacterSelect()
     {
+        foreach (NetworkPlayer player in Players.Values)
+        {
+            player.IsReady = false;
+            player.CharacterId = -1;
+        }
+
         GD.Print($"{GetRpcFormat()} Changing scenes to Character Select!");
         GetTree().ChangeSceneToFile("res://scenes/CharacterSelect.tscn");
     }
@@ -521,6 +572,11 @@ public partial class NetworkManager : Node
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcEnterGame(int map_idx)
     {
+        foreach (NetworkPlayer player in Players.Values)
+        {
+            player.Died = false;
+        }
+        
         GD.Print($"{GetRpcFormat()} Entered game on map {map_idx}!");
         GetTree().ChangeSceneToPacked(Game.Instance.Maps[map_idx]);
     }

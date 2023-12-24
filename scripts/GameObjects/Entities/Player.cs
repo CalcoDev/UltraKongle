@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using KongleJam.Components;
 using KongleJam.Managers;
@@ -20,23 +21,18 @@ public partial class Player : Node2D
     [Export] private RigidBody2D _rb;
     [Export] private Area2D _groundedChecker;
     [Export] private StateMachineComponent _sm;
-
-    // [ExportGroup("Yeet")]
-    // [Export] private float _maxYeetDist;
-    // [Export] private float _maxYeetForce;
+    [Export] private HealthComponent _health;
+    [Export] private AnimationPlayer _anim;
 
     private const float YeetMaxDist = 100;
     private const float YeetMaxDistShow = 25;
     private const float YeetMaxForce = 300;
 
-    private const float YeetMouseCamOffsetDist = 200;
-    
     private const int YeetCountMax = 2;
 
     // Refs
-    // private RigidBody2D _rb;
-
     private Node2D _interpolated;
+    private InterpolationComponent _interpComp;
     private Node2D _visuals;
 
     private Node2D _blob;
@@ -44,14 +40,11 @@ public partial class Player : Node2D
 
     // Input
     private Key _iYeet;
-    private Key _iDive;
-    private Key _iDiveMouse;
-    private float _iRoll;
+    private Key _iDash;
 
     // States
     public const int StNormal = 0;
-    public const int StDive = 1;
-    public const int StRoll = 2;
+    public const int StDash = 1;
 
     private bool _isYeeting;
 
@@ -61,42 +54,46 @@ public partial class Player : Node2D
     private bool _faceVelocity = true;
     private int _yeetCountRemaining;
 
-    // Diving
-    private const float DiveImpulse = 275;
-    private const float DiveBounceImpulse = 150;
-
-    // Roll
-    private const float DiveRollImpulse = 275f;
-
     // General
     private bool _isGrounded = false;
 
     // STUFF
     public bool Locked { get; set; } = false;
 
+    private Label _usernameLabel;
+    private ProgressBar _healthbar;
+
+    private Timer _dashCooldownTimer;
+    private Timer _dashCollTimer;
+
+
     public override void _EnterTree()
     {
-        if (Instance == null)
-            Instance = this;
-        else
+        if (Instance != null)
         {
-            GD.PrintErr("ERROR: Player already exists!");
-            QueueFree();
+            GD.Print("WARNING: Player already exists! Overriding!");
         }
+        Instance = this;
 
         _interpolated = GetNode<Node2D>("Interpolated");
         _visuals = GetNode<Node2D>("Visuals");
         _blob = GetNode<Node2D>("Blob");
         _arrow = GetNode<Node2D>("Arrow");
 
-        InterpolationComponent interpComp = GetNode<InterpolationComponent>("InterpolationComponent");
-        interpComp.ResetPos = true;
-        interpComp.StartPos = GlobalPosition;
+        _interpComp = GetNode<InterpolationComponent>("InterpolationComponent");
+        _interpComp.ResetPos = true;
+        _interpComp.StartPos = GlobalPosition;
 
         GD.Print($"{NetworkManager.GetRpcFormat()} Trying to teleport interp comp to {GlobalPosition}!");
 
-        interpComp.Follow = _rb;
-        interpComp.Follower = _interpolated;
+        _interpComp.Follow = _rb;
+        _interpComp.Follower = _interpolated;
+
+        _usernameLabel = GetNode<Label>("%Username");
+        _healthbar = GetNode<ProgressBar>("%Healthbar");
+
+        _dashCollTimer = GetNode<Timer>("DashCollTimer");
+        _dashCooldownTimer = GetNode<Timer>("DashCooldownTimer");
     }
 
     public override void _Ready()
@@ -104,24 +101,70 @@ public partial class Player : Node2D
         _groundedChecker.BodyEntered += OnEnterGround;
         _groundedChecker.BodyExited += OnExitGround;
 
+        _rb.BodyEntered += OnCollide;
+        _rb.BodyExited += OnExitCollide;
+        
         _yeetCountRemaining = YeetCountMax;
 
         _sm.Init(4, StNormal);
         _sm.SetCallbacks(StNormal, NormalUpdate, NormalPhysics);
-        _sm.SetCallbacks(StDive, DiveUpdate, null, DiveEnter, DiveExit);
-        _sm.SetCallbacks(StRoll, RollUpdate, RollPhysics, RollEnter, RollExit);
+        _sm.SetCallbacks(StDash, DashUpdate, null, DashEnter, DashExit);
+
+        _health.OnDied += () => {
+            GD.Print($"{NetworkManager.GetRpcFormat()} Died. Announcing death.");
+            NetworkManager.Instance.AnnounceDeath();
+
+            // TODO(calco): Some sort of death menu screen thing
+            Locked = true;
+        
+            _usernameLabel.AddThemeColorOverride("font_color", new Color("#a53030"));
+            _healthbar.QueueFree();
+            _health.QueueFree();
+        };
+        _health.OnHealthChanged += (old, curr, max) => {
+            _healthbar.MinValue = 0;
+            _healthbar.MaxValue = max;
+            _healthbar.Value = curr;
+
+            _sync.SyncValue("player_health", Variant.From(curr));
+            _sync.SyncValue("player_maxhealth", Variant.From(max));
+        };
+        _health.ResetHealth();
+
+        _usernameLabel.Text = NetworkManager.Username;
+
+        _dashCollTimer.Start();
+        _dashCooldownTimer.Start();
     }
 
     public override void _Process(double delta)
     {
+        if (Locked)
+        {
+            GlobalPosition = _interpolated.GlobalPosition;
+            _sync.SyncValue("player_position", Variant.From(GlobalPosition));
+            return;
+        }
+
         HandleInput();
+
+        if (Input.IsActionJustPressed("ui_focus_next"))
+        {
+            _health.TakeDamage(25f);
+        }
         
         GlobalPosition = _interpolated.GlobalPosition;
 
         int newState = _sm.Update();
         _sm.SetState(newState);
 
-        _sync.SyncValue("player_position", Variant.From(_interpolated.GlobalPosition));
+        if (Game.Camera.IsOutOfBounds(GlobalPosition))
+        {
+            Vector2 wrapped = Game.Camera.WrapAroundBounds(GlobalPosition);
+            _interpComp.ForceSetPosition(wrapped);
+        }
+
+        _sync.SyncValue("player_position", Variant.From(GlobalPosition));
     }
 
     public override void _PhysicsProcess(double delta)
@@ -141,10 +184,7 @@ public partial class Player : Node2D
     private void HandleInput()
     {
         _iYeet.Update("yeet");
-        _iDive.Update("dive");
-        _iDiveMouse.Update("dive_mouse");
-
-        _iRoll = Input.GetAxis("roll_axis_neg", "roll_axis_pos");
+        _iDash.Update("dash");
     }
 
     // STATES
@@ -152,9 +192,9 @@ public partial class Player : Node2D
     // NORMAL STATE
    private int NormalUpdate()
    {
-        // TODO(calco): Dive cooldown
-        if (_iDiveMouse.Pressed && !_isGrounded)
-            return StDive;
+        // GD.Print(_dashCooldownTimer.TimeLeft);
+        if (_iDash.Pressed && Calc.FloatEquals((float)_dashCooldownTimer.TimeLeft, 0f))
+            return StDash;
 
         // Yeeting
         if (_iYeet.Pressed && _yeetCountRemaining > 0)
@@ -169,11 +209,6 @@ public partial class Player : Node2D
 
         if (_isYeeting)
         {
-            // Camera Offset
-            // var screenSize = GetViewport().GetVisibleRect().Size * 1 / Game.Camera.Zoom;
-            // var scaledMousePos = GetLocalMousePosition() / screenSize;
-            // Game.Camera.Offset += YeetMouseCamOffsetDist * 2f * scaledMousePos;
-
             _yeetDragEnd = GetGlobalMousePosition();
             Vector2 offset = _yeetDragStart - _yeetDragEnd;
 
@@ -201,6 +236,10 @@ public partial class Player : Node2D
                 _rb.ApplyImpulse(dir * t * YeetMaxForce);
             }
         }
+        else
+        {
+            _sync.SyncValue("player_rotation", Variant.From(_visuals.Rotation));
+        }
 
         if (_faceVelocity)
         {
@@ -215,161 +254,76 @@ public partial class Player : Node2D
 
     }
 
-    // DIVE STATE
-    private float _diveRollDir = 0f;
-    private float _diveRollDirTimer = 0f;
-    private void DiveEnter()
+    // DASH STATE
+    private Vector2 _dashDir;
+    private Vector2 _dashStartPos;
+
+    private const float DashSpeed = 400f;
+    private const float DashEndVelocity = 150f;
+    private const float MaxDashDist = 75;
+
+    private void DashEnter()
     {
+        _sync.SyncValue("player_is_dashing", Variant.From(true));
+        _anim.Play("dash");
+        // Game.Hitstop(0.1f);
+        // Game.Camera.ShakeTime(5000f, 1000f, 0.2f);
+
+        _dashCollTimer.Start(0.05f);
+
+        _rb.GravityScale = 0;
         _rb.LinearVelocity = Vector2.Zero;
-        _rb.ApplyImpulse(Vector2.Down * DiveImpulse);
+        _rb.AngularVelocity = 0;
 
-        _isYeeting = true;
-        _yeetDragStart = GetGlobalMousePosition();
-
-        _blob.Visible = true;
-        _arrow.Visible = true;
-
-        _diveRollDirTimer = 0.4f;
-        _diveRollDir = _iRoll;
-
-        _visuals.RotationDegrees = 180f;
+        _dashDir = (GetGlobalMousePosition() - GlobalPosition).Normalized();
+        _dashStartPos = GlobalPosition;
+        
+        _visuals.Rotation = _dashDir.AngleTo(Vector2.Up);
     }
 
-    private int DiveUpdate()
+    private bool _collided = false;
+    private int DashUpdate()
     {
-        _yeetDragEnd = GetGlobalMousePosition();
-        Vector2 offset = _yeetDragStart - _yeetDragEnd;
-
-        float angle = -offset.AngleTo(Vector2.Up);
-        _arrow.Rotation = angle;
-
-        float dist = offset.Length();
-        float t = Mathf.Min(dist / YeetMaxDist, 1f);
-        _blob.Rotation = angle;
-        _blob.GetChild<Node2D>(0).Position = new Vector2(-2, 8 + t * YeetMaxDistShow); 
-        
-        QueueRedraw();
-        if (_iDiveMouse.Released)
-        {
-            _yeetCountRemaining -= 1;
-                
-            _isYeeting = false;
-            _faceVelocity = true;
-            _blob.Visible = false;
-            _arrow.Visible = false;
-
-            Vector2 dir = offset.Normalized();
-            _rb.LinearVelocity = Vector2.Zero;
-            _rb.ApplyImpulse(dir * t * YeetMaxForce);
+        float distSqr = (GlobalPosition - _dashStartPos).LengthSquared();
+        if (distSqr >= MaxDashDist * MaxDashDist)
             return StNormal;
-        }
-
-        _diveRollDirTimer -= Game.DeltaTime;
-        if (_diveRollDirTimer > 0 && Calc.FloatEquals(_diveRollDir, 0))
-            _diveRollDir = _iRoll;
-
-        return StDive;
-    }
-
-    private void DiveExit()
-    {
-        // TODO(calco): Add a timer for transitioning into roll
-        // if (_diveRollDirTimer > 0 && Calc.FloatEquals(_diveRollDir, 0))
-        //     _diveRollDir = _iRoll;
         
-        // _rb.LinearVelocity = Vector2.Zero;
-        // if (Calc.FloatEquals(_diveRollDir, 0))
-        //     _rb.ApplyImpulse(Vector2.Up * DiveBounceImpulse);
-        // else
-        // {
-        //     float sign = Mathf.Sign(_iRoll);
-        //     _rb.ApplyImpulse(Vector2.Right.Rotated(Mathf.Pi / -10f * sign) * sign * DiveRollImpulse);
-        //     _sm.SetStateForced(StRoll);
-        // }
-    }
-
-    // ROLL FUNCTION
-    private float _prevFriction;
-    private void RollEnter()
-    {
-        // GD.Print($"SETTING PREV TO {_rb.PhysicsMaterialOverride.Friction}");
-        _prevFriction = _rb.PhysicsMaterialOverride.Friction;
-        _rb.PhysicsMaterialOverride.Friction = 0f;
-    }
-    
-    private int RollUpdate()
-    {
-        if (Calc.FloatEquals(_iRoll, 0))
+        _rb.LinearVelocity = _dashDir * DashSpeed;
+        if (Calc.FloatEquals((float)_dashCollTimer.TimeLeft, 0f) && _collided)
             return StNormal;
 
-
-        // TODO(calco): Horrible code repeat.
-        if (_iYeet.Pressed)
-        {
-            _isYeeting = true;
-            _yeetDragStart = GetGlobalMousePosition();
-
-            _blob.Visible = true;
-            _arrow.Visible = true;
-        }
-
-        if (_isYeeting)
-        {
-            _yeetDragEnd = GetGlobalMousePosition();
-            Vector2 offset = _yeetDragStart - _yeetDragEnd;
-
-            float angle = -offset.AngleTo(Vector2.Up);
-            _arrow.Rotation = angle;
-
-            float dist = offset.Length();
-            float t = Mathf.Min(dist / YeetMaxDist, 1f);
-            _blob.Rotation = angle;
-            _blob.GetChild<Node2D>(0).Position = new Vector2(-2, 8 + t * YeetMaxDistShow);
-
-            QueueRedraw();
-            if (_iYeet.Released)
-            {
-                _yeetCountRemaining -= 1;
-                
-                _isYeeting = false;
-                _faceVelocity = true;
-                _blob.Visible = false;
-                _arrow.Visible = false;
-
-                Vector2 dir = offset.Normalized();
-                _rb.LinearVelocity = Vector2.Zero;
-                _rb.ApplyImpulse(dir * t * YeetMaxForce);
-
-                return StNormal;
-            }
-        }
-
-        return StRoll;
+        return StDash;
     }
-    
-    private void RollPhysics()
+
+    private void DashExit()
     {
-        // TODO(calco): A bit of slowing down and up
+        _sync.SyncValue("player_is_dashing", Variant.From(false));
+        _anim.Play("normal");
+        _rb.GravityScale = 1;
+        _rb.LinearVelocity = _dashDir * DashEndVelocity;
+
+        _dashCooldownTimer.Start(0.75f);
     }
-    
-    private void RollExit()
-    {
-        GD.Print($"SETTING FRICTION BACK: {_prevFriction}");
-        _rb.PhysicsMaterialOverride.Friction = _prevFriction;
-    }
-    
+
     // CALLBACK FUNCTIONS
     private void OnEnterGround(Node body)
     {
         _yeetCountRemaining = YeetCountMax;
         _isGrounded = true;
-    
-        if (_sm.State == StDive)
-            _sm.SetState(StNormal);
     }
 
     private void OnExitGround(Node body)
     {
         _isGrounded = false;
+    }
+
+    private void OnCollide(Node body)
+    {
+        _collided = true;
+    }
+
+    private void OnExitCollide(Node body)
+    {
+        _collided = false;
     }
 }

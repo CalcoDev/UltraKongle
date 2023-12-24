@@ -12,6 +12,8 @@ public class NetworkPlayer
 
     public bool IsReady;
     public int CharacterId;
+    
+    public bool Died;
 
     public NetworkPlayer(long id, string username, int index, int localIndex)
     {
@@ -21,5 +23,7 @@ public class NetworkPlayer
         LocalIndex = localIndex;
         IsReady = false;
         CharacterId = -1;
+
+        Died = false;
     }
 }
