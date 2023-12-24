@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3 uid="uid://cpklxqcy6mpee"]
+[gd_scene load_steps=16 format=3 uid="uid://cpklxqcy6mpee"]
 
 [ext_resource type="Script" path="res://scripts/GameObjects/Entities/Player.cs" id="1_xby47"]
 [ext_resource type="Resource" uid="uid://cqpaebco8y8ru" path="res://resources/dialogue/speakers/speaker_laitier.tres" id="2_y1hhq"]
 [ext_resource type="Script" path="res://scripts/Resources/Dialogue.cs" id="3_i5cak"]
 [ext_resource type="Resource" uid="uid://do2vrkv7il604" path="res://resources/dialogue/speakers/speaker_kongle.tres" id="4_slw11"]
 [ext_resource type="PackedScene" uid="uid://c2uvefidrt3fg" path="res://scenes/Components/state_machine_component.tscn" id="5_6s4f8"]
+[ext_resource type="PackedScene" uid="uid://dngq0wj0hn5o" path="res://scenes/Components/network_sync_component.tscn" id="5_g8sm5"]
 [ext_resource type="PackedScene" uid="uid://c352688d6tu81" path="res://scenes/Components/interpolation_component.tscn" id="5_viq02"]
 [ext_resource type="Texture2D" uid="uid://dxkmpjnhai4fa" path="res://assets/entities/player.png" id="6_lhhtp"]
 [ext_resource type="Texture2D" uid="uid://o05583bcn8hk" path="res://assets/entities/player_blob.png" id="7_f15yy"]
@@ -38,13 +39,15 @@ height = 8.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d4dqu"]
 size = Vector2(9, 4.5)
 
-[node name="Player" type="Node2D" node_paths=PackedStringArray("_rb", "_groundedChecker", "_sm")]
-position = Vector2(242, 101)
+[node name="Player" type="Node2D" node_paths=PackedStringArray("_sync", "_rb", "_groundedChecker", "_sm")]
 script = ExtResource("1_xby47")
 DIALOGUE = SubResource("Resource_tjigg")
+_sync = NodePath("NetworkSyncComponent")
 _rb = NodePath("RigidBody2D")
 _groundedChecker = NodePath("GroundedChecker")
 _sm = NodePath("StateMachineComponent")
+
+[node name="NetworkSyncComponent" parent="." instance=ExtResource("5_g8sm5")]
 
 [node name="StateMachineComponent" parent="." instance=ExtResource("5_6s4f8")]
 
@@ -74,6 +77,7 @@ texture = ExtResource("8_0736m")
 centered = false
 
 [node name="RigidBody2D" type="RigidBody2D" parent="."]
+top_level = true
 collision_layer = 2
 physics_material_override = SubResource("PhysicsMaterial_oeg8w")
 lock_rotation = true

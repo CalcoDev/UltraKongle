@@ -14,9 +14,6 @@ public partial class CharacterSelectUI : Node2D
 	[Export] private Texture2D _hoveredTexture;
 	[Export] private Texture2D _selectedTexture;
 
-	[ExportGroup("Characters")]
-	[Export] private Array<Character> _characters;
-
 	private Camera _cam;
 	private ShaderMaterial _backgroundMat;
 
@@ -52,14 +49,14 @@ public partial class CharacterSelectUI : Node2D
 		int idx = 0;
 		foreach (TextureRect select in _characterSelects.GetChildren().Cast<TextureRect>())
 		{
-			if (idx >= _characters.Count)
+			if (idx >= Game.Instance.Characters.Count)
 			{
 				select.Visible = false;
 				continue;
 			}
 			
 			TextureRect texture = select.GetNode<TextureRect>("%Texture");
-			texture.Texture = _characters[idx].Texture;
+			texture.Texture = Game.Instance.Characters[idx].Texture;
 			select.MouseEntered += () => {
 				if (_selectedRect != select)
 					select.Texture = _hoveredTexture;
@@ -120,9 +117,9 @@ public partial class CharacterSelectUI : Node2D
     // NETWORK MANAGER HANDLERS
     private void HandlePlayerSelectCharacter(long id)
 	{
-		int idx = NetworkManager.Instance.Players[id].Index;
+		int idx = NetworkManager.Instance.Players[id].LocalIndex;
 		int charIdx = NetworkManager.Instance.Players[id].CharacterId;
-		Character character = _characters[charIdx];
+		Character character = Game.Instance.Characters[charIdx];
 		TextureRect tr = _characterDisplays
 			.GetChild(idx)
 			.GetNode<TextureRect>("Texture");
@@ -160,8 +157,8 @@ public partial class CharacterSelectUI : Node2D
 				
 	private void UI_SelectCharacter()
 	{
-		_characterName.Text = _characters[_selectedId].Name;
-		_characterDescription.Text = _characters[_selectedId].Description;
+		_characterName.Text = Game.Instance.Characters[_selectedId].Name;
+		_characterDescription.Text = Game.Instance.Characters[_selectedId].Description;
 
 		// TODO(calo): Shop preview etc etc
 	}

@@ -1,4 +1,5 @@
 ﻿using Godot;
+using Godot.Collections;
 using KongleJam.Components;
 using KongleJam.GameObjects;
 using KongleJam.Resources;
@@ -11,6 +12,10 @@ public partial class Game : Node
 
     public static float DeltaTime { get; private set; }
     public static float FixedTime { get; private set; }
+
+	[ExportGroup("Assignables")]
+	[Export] public Array<Character> Characters;
+    [Export] public Array<PackedScene> Maps;
 
     public static Camera Camera { get; set; }
 
@@ -96,5 +101,23 @@ public partial class Game : Node
     private static void ResetTimeScale()
     {
         Engine.TimeScale = 1f;
+    }
+
+    public static void Pause()
+    {
+        Instance.GetTree().Paused = true;
+    }
+
+    public static void Unpause()
+    {
+        Instance.GetTree().Paused = false;
+    }
+
+    public static void TogglePause()
+    {
+        if (Instance.GetTree().Paused)
+            Unpause();
+        else
+            Pause();
     }
 }

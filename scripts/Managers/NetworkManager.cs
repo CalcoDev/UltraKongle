@@ -21,6 +21,8 @@ public partial class NetworkManager : Node
     public static string Username { get; private set; } = "DEFAULT";
     public static int PeerId { get; private set; } = -1;
     public static long ServerPeerId { get; private set; } = -1;
+
+    public static NetworkPlayer Player => Instance.Players[Id];
     
     // Store all players
     public Dictionary<long, NetworkPlayer> Players;
@@ -49,6 +51,9 @@ public partial class NetworkManager : Node
     public Action<long> OnPlayerSelectCharacter;
 
     private Upnp _upnp;
+
+
+    public Action<long, string, Variant> OnRpcSyncThing;
 
     // STATIC HELPERS 
     public static bool IsSelfPid(int pid)
@@ -159,8 +164,12 @@ public partial class NetworkManager : Node
         _readyTimer.OneShot = true;
         _readyTimer.Timeout += () => {
             GD.Print("Ready timer timeout. Broadcasting enter game...");
+           
+            var rng = new RandomNumberGenerator();
+            int map_idx = rng.RandiRange(0, Game.Instance.Maps.Count - 1);
+            
             Broadcast(true, (player) => {
-                RpcId(player.Id, MethodName.RpcEnterGame);
+                RpcId(player.Id, MethodName.RpcEnterGame, map_idx);
             });
         };
 
@@ -171,12 +180,12 @@ public partial class NetworkManager : Node
                 
                 string usrnam = $"Player {id}"; // short name to fit lol
                 int idx = Players.Count;
-                Players.Add(id, new NetworkPlayer(id, usrnam, idx));
+                Players.Add(id, new NetworkPlayer(id, usrnam, idx, idx));
 
-                RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id, Id });
+                RpcId(id, MethodName.RpcInitPlayer, new Variant[] { id, Id, idx });
                 
                 // Tell everyone about new guy
-                Rpc(MethodName.RpcSendPlayerInfo, new Variant[] { id, usrnam });
+                Rpc(MethodName.RpcSendPlayerInfo, new Variant[] { id, usrnam, idx });
                
                // Tell new guy about everyone
                 foreach (NetworkPlayer player in Players.Values)
@@ -186,7 +195,7 @@ public partial class NetworkManager : Node
 
                     RpcId(
                         id, MethodName.RpcSendPlayerInfo,
-                        new Variant[] { player.Id, player.Username } 
+                        new Variant[] { player.Id, player.Username, player.Index } 
                     );
                 }
             }
@@ -260,7 +269,7 @@ public partial class NetworkManager : Node
         Id = PeerId;
         ServerPeerId = PeerId;
         Username = username.Length == 0 ? "SERVER" : username;
-        Players.Add(Id, new NetworkPlayer(Id, Username, 0));
+        Players.Add(Id, new NetworkPlayer(Id, Username, 0, 0));
         OnServerConnectionsChanged?.Invoke();
 
         OnServerStarted?.Invoke();
@@ -342,6 +351,13 @@ public partial class NetworkManager : Node
         }
     }
 
+    public void SyncThing(string name, Variant value)
+    {
+        Broadcast(false, (player) => {
+            RpcId(player.Id, MethodName.RpcSyncThing, Id, name, value);
+        });
+    }
+
     public void UpdatePlayerCharacter(int idx)
     {
         GD.Print($"{GetRpcFormat()} Tried updating player character!");
@@ -375,15 +391,21 @@ public partial class NetworkManager : Node
         return $"RPC {Id} ({type}): ";
     }
 
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void RpcSyncThing(long id, string name, Variant value)
+    {
+        OnRpcSyncThing?.Invoke(id, name, value);
+    }
+
     [Rpc(MultiplayerApi.RpcMode.Authority)]
-    private void RpcInitPlayer(long id, long serverId)
+    private void RpcInitPlayer(long id, long serverId, int idx)
     {
         Id = id;
         ServerPeerId = serverId;
             
-        Rpc(MethodName.RpcSendPlayerInfo, new Variant[] {Id, Username});
+        Rpc(MethodName.RpcSendPlayerInfo, new Variant[] {Id, Username, idx});
         
-        GD.Print($"{GetRpcFormat()} Initialized.");
+        GD.Print($"{GetRpcFormat()} Initialized with index {idx}.");
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
@@ -408,19 +430,20 @@ public partial class NetworkManager : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
-    private void RpcSendPlayerInfo(long id, string username)
+    private void RpcSendPlayerInfo(long id, string username, int idx)
     {
         if (!Players.ContainsKey(id))
         {
-            GD.Print($"{GetRpcFormat()} Adding player {id} {username} to list!");
-            int idx = Players.Count;
-            Players.Add(id, new NetworkPlayer(id, username, idx));
+            GD.Print($"{GetRpcFormat()} Adding player {id} {username} {idx} to list!");
+            int localIndex = Players.Count;
+            Players.Add(id, new NetworkPlayer(id, username, idx, localIndex));
         }
         else
         {
             // Players[id] = new NetworkPlayer(id, username);
             Players[id].Id = id;
             Players[id].Username = username;
+            Players[id].Index = idx;
             // GD.Print($"{GetRpcFormat()} Tried adding player {id} {username} to list, but was already present!");
         }
 
@@ -430,7 +453,7 @@ public partial class NetworkManager : Node
                 RpcId(
                     player.Id,
                     MethodName.RpcSendPlayerInfo,
-                    new Variant[] { id, username }
+                    new Variant[] { id, username, idx }
                 );
             });
         }
@@ -496,12 +519,10 @@ public partial class NetworkManager : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcEnterGame()
+    private void RpcEnterGame(int map_idx)
     {
-        GD.Print($"{GetRpcFormat()} Entered game.");
-        GetTree().ChangeSceneToFile("res://scenes/Gameplay.tscn");
-
-        // TODO(calco): This countdown should be server authoritative
+        GD.Print($"{GetRpcFormat()} Entered game on map {map_idx}!");
+        GetTree().ChangeSceneToPacked(Game.Instance.Maps[map_idx]);
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority)]

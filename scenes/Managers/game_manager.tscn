@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://2a8brshk8gby"]
+[gd_scene load_steps=6 format=3 uid="uid://2a8brshk8gby"]
 
 [ext_resource type="Script" path="res://scripts/Managers/Game.cs" id="1_sdhgy"]
+[ext_resource type="Resource" uid="uid://c6icjgnd3vldw" path="res://resources/characters/char_kongle.tres" id="2_cxb71"]
+[ext_resource type="Resource" uid="uid://by7emb0qbyw3x" path="res://resources/characters/char_laitier.tres" id="3_s3cnx"]
+[ext_resource type="PackedScene" uid="uid://cfas0332xrlnc" path="res://scenes/Maps/Map0.tscn" id="4_81u5j"]
+[ext_resource type="PackedScene" uid="uid://c1dtvq1kahsjp" path="res://scenes/Maps/Map2.tscn" id="5_c3s5y"]
 
 [node name="GameManager" type="Node"]
+process_mode = 3
 script = ExtResource("1_sdhgy")
+Characters = Array[Object]([ExtResource("2_cxb71"), ExtResource("3_s3cnx")])
+Maps = Array[PackedScene]([ExtResource("4_81u5j"), ExtResource("5_c3s5y")])

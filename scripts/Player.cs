@@ -5,7 +5,7 @@ using KongleJam.GameObjects.Physics;
 using KongleJam.Managers;
 using KongleJam.Utils;
 
-namespace KongleJam;
+namespace KongleJam._Old;
 
 public partial class Player : Node2D
 {

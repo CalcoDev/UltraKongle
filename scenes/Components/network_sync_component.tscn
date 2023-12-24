@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dngq0wj0hn5o"]
+
+[ext_resource type="Script" path="res://scripts/Components/NetworkSyncComponent.cs" id="1_rylks"]
+
+[node name="NetworkSyncComponent" type="Node"]
+script = ExtResource("1_rylks")

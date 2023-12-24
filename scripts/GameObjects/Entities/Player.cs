@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using KongleJam.Components;
 using KongleJam.Managers;
@@ -10,7 +9,12 @@ namespace KongleJam.GameObjects.Entities;
 
 public partial class Player : Node2D
 {
+    public static Player Instance { get; private set; }
+
     [Export(PropertyHint.ResourceType, "Dialogue")] private Dialogue DIALOGUE;
+
+    [ExportGroup("Network sync")]
+    [Export] private NetworkSyncComponent _sync;
 
     [ExportGroup("References")]
     [Export] private RigidBody2D _rb;
@@ -58,7 +62,7 @@ public partial class Player : Node2D
     private int _yeetCountRemaining;
 
     // Diving
-    private const float DiveImpulse = 450;
+    private const float DiveImpulse = 275;
     private const float DiveBounceImpulse = 150;
 
     // Roll
@@ -67,14 +71,30 @@ public partial class Player : Node2D
     // General
     private bool _isGrounded = false;
 
+    // STUFF
+    public bool Locked { get; set; } = false;
+
     public override void _EnterTree()
     {
+        if (Instance == null)
+            Instance = this;
+        else
+        {
+            GD.PrintErr("ERROR: Player already exists!");
+            QueueFree();
+        }
+
         _interpolated = GetNode<Node2D>("Interpolated");
         _visuals = GetNode<Node2D>("Visuals");
         _blob = GetNode<Node2D>("Blob");
         _arrow = GetNode<Node2D>("Arrow");
 
         InterpolationComponent interpComp = GetNode<InterpolationComponent>("InterpolationComponent");
+        interpComp.ResetPos = true;
+        interpComp.StartPos = GlobalPosition;
+
+        GD.Print($"{NetworkManager.GetRpcFormat()} Trying to teleport interp comp to {GlobalPosition}!");
+
         interpComp.Follow = _rb;
         interpComp.Follower = _interpolated;
     }
@@ -100,6 +120,8 @@ public partial class Player : Node2D
 
         int newState = _sm.Update();
         _sm.SetState(newState);
+
+        _sync.SyncValue("player_position", Variant.From(_interpolated.GlobalPosition));
     }
 
     public override void _PhysicsProcess(double delta)
@@ -131,7 +153,7 @@ public partial class Player : Node2D
    private int NormalUpdate()
    {
         // TODO(calco): Dive cooldown
-        if (_iDive.Pressed || _iDiveMouse.Pressed && !_isGrounded)
+        if (_iDiveMouse.Pressed && !_isGrounded)
             return StDive;
 
         // Yeeting
@@ -164,6 +186,7 @@ public partial class Player : Node2D
             _blob.Rotation = angle;
             _blob.GetChild<Node2D>(0).Position = new Vector2(-2, 8 + t * YeetMaxDistShow);
 
+            QueueRedraw();
             if (_iYeet.Released)
             {
                 _yeetCountRemaining -= 1;
@@ -177,8 +200,6 @@ public partial class Player : Node2D
                 _rb.LinearVelocity = Vector2.Zero;
                 _rb.ApplyImpulse(dir * t * YeetMaxForce);
             }
-
-            QueueRedraw();
         }
 
         if (_faceVelocity)
@@ -202,6 +223,12 @@ public partial class Player : Node2D
         _rb.LinearVelocity = Vector2.Zero;
         _rb.ApplyImpulse(Vector2.Down * DiveImpulse);
 
+        _isYeeting = true;
+        _yeetDragStart = GetGlobalMousePosition();
+
+        _blob.Visible = true;
+        _arrow.Visible = true;
+
         _diveRollDirTimer = 0.4f;
         _diveRollDir = _iRoll;
 
@@ -210,8 +237,32 @@ public partial class Player : Node2D
 
     private int DiveUpdate()
     {
-        // if (_isGrounded)
-        //     return StNormal;
+        _yeetDragEnd = GetGlobalMousePosition();
+        Vector2 offset = _yeetDragStart - _yeetDragEnd;
+
+        float angle = -offset.AngleTo(Vector2.Up);
+        _arrow.Rotation = angle;
+
+        float dist = offset.Length();
+        float t = Mathf.Min(dist / YeetMaxDist, 1f);
+        _blob.Rotation = angle;
+        _blob.GetChild<Node2D>(0).Position = new Vector2(-2, 8 + t * YeetMaxDistShow); 
+        
+        QueueRedraw();
+        if (_iDiveMouse.Released)
+        {
+            _yeetCountRemaining -= 1;
+                
+            _isYeeting = false;
+            _faceVelocity = true;
+            _blob.Visible = false;
+            _arrow.Visible = false;
+
+            Vector2 dir = offset.Normalized();
+            _rb.LinearVelocity = Vector2.Zero;
+            _rb.ApplyImpulse(dir * t * YeetMaxForce);
+            return StNormal;
+        }
 
         _diveRollDirTimer -= Game.DeltaTime;
         if (_diveRollDirTimer > 0 && Calc.FloatEquals(_diveRollDir, 0))
@@ -223,25 +274,25 @@ public partial class Player : Node2D
     private void DiveExit()
     {
         // TODO(calco): Add a timer for transitioning into roll
-        if (_diveRollDirTimer > 0 && Calc.FloatEquals(_diveRollDir, 0))
-            _diveRollDir = _iRoll;
+        // if (_diveRollDirTimer > 0 && Calc.FloatEquals(_diveRollDir, 0))
+        //     _diveRollDir = _iRoll;
         
-        _rb.LinearVelocity = Vector2.Zero;
-        if (Calc.FloatEquals(_diveRollDir, 0))
-            _rb.ApplyImpulse(Vector2.Up * DiveBounceImpulse);
-        else
-        {
-            float sign = Mathf.Sign(_iRoll);
-            _rb.ApplyImpulse(Vector2.Right.Rotated(Mathf.Pi / -10f * sign) * sign * DiveRollImpulse);
-            _sm.SetStateForced(StRoll);
-        }
+        // _rb.LinearVelocity = Vector2.Zero;
+        // if (Calc.FloatEquals(_diveRollDir, 0))
+        //     _rb.ApplyImpulse(Vector2.Up * DiveBounceImpulse);
+        // else
+        // {
+        //     float sign = Mathf.Sign(_iRoll);
+        //     _rb.ApplyImpulse(Vector2.Right.Rotated(Mathf.Pi / -10f * sign) * sign * DiveRollImpulse);
+        //     _sm.SetStateForced(StRoll);
+        // }
     }
 
     // ROLL FUNCTION
     private float _prevFriction;
     private void RollEnter()
     {
-        GD.Print($"SETTING PREV TO {_rb.PhysicsMaterialOverride.Friction}");
+        // GD.Print($"SETTING PREV TO {_rb.PhysicsMaterialOverride.Friction}");
         _prevFriction = _rb.PhysicsMaterialOverride.Friction;
         _rb.PhysicsMaterialOverride.Friction = 0f;
     }

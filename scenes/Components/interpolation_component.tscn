@@ -3,4 +3,6 @@
 [ext_resource type="Script" path="res://scripts/Components/InterpolationComponent.cs" id="1_x43qq"]
 
 [node name="InterpolationComponent" type="Node"]
+process_priority = 100
+process_physics_priority = 100
 script = ExtResource("1_x43qq")

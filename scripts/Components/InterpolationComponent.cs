@@ -16,6 +16,9 @@ public partial class InterpolationComponent : Node
     [Export] public Node2D Follower;
     [Export] public bool FollowerTopLevel = false;
 
+    public Vector2 StartPos = Vector2.Zero;
+    public bool ResetPos = false;
+
     private Transform2D _prevTransform;
     private Transform2D _currTransform;
 
@@ -32,6 +35,9 @@ public partial class InterpolationComponent : Node
 
         if (FollowTopLevel)
             Follow.TopLevel = true;
+        
+        if (ResetPos)
+            prevPos = StartPos;
         
         Follow.GlobalPosition = prevPos;
         Follower.GlobalPosition = prevPos;
